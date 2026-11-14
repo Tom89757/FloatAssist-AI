@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="assist_service_label">Quick assist</string>
+    <string name="assist_channel">Quick assist</string>
+    <string name="assist_running">The floating quick assistant is ready</string>
+    <string name="assist_notification_open">Open quick assist settings</string>
+
+    <string name="assist_menu_title">Quick assist</string>
+    <string name="assist_menu_back">Back</string>
+    <string name="assist_menu_close">Close</string>
+    <string name="assist_group_screen">Screen</string>
+    <string name="assist_group_web">Web</string>
+    <string name="assist_group_text">Text</string>
+    <string name="assist_group_image">Image</string>
+    <string name="assist_group_voice">Voice</string>
+
+    <string name="assist_task_screen_summarize">Summarize screen</string>
+    <string name="assist_task_screen_extract">Extract screen text</string>
+    <string name="assist_task_screen_translate">Translate screen</string>
+    <string name="assist_task_screen_what">What is this</string>
+    <string name="assist_task_screen_actions">Find actions</string>
+    <string name="assist_task_clip_summarize">Summarize clipboard</string>
+    <string name="assist_task_clip_polish">Polish or fix</string>
+    <string name="assist_task_image_ocr">Extract image text</string>
+    <string name="assist_task_image_explain">Explain image</string>
+    <string name="assist_task_image_qr">Scan QR code</string>
+    <string name="assist_task_web_summarize">Summarize page</string>
+    <string name="assist_task_web_ask">Ask about page</string>
+    <string name="assist_task_voice_transcribe">Transcribe voice</string>
+    <string name="assist_task_pdf_summarize">Summarize PDF</string>
+
+    <string name="assist_unavailable_a11y">Turn on accessibility to read the screen</string>
+    <string name="assist_unavailable_overlay">Allow display over other apps to use the floating assistant</string>
+    <string name="assist_unavailable_model">Not connected. Tap to connect.</string>
+    <string name="assist_unavailable_vision">The current model cannot read images</string>
+    <string name="assist_unavailable_voice">No speech engine is available</string>
+    <string name="assist_unavailable_clipboard">The clipboard is empty</string>
+    <string name="assist_unavailable_image">No image is selected</string>
+
+    <string name="assist_error_secure_screen">This screen does not allow screenshots</string>
+    <string name="assist_error_screen_unreadable">This screen cannot be read</string>
+    <string name="assist_error_network">Network error. Try again.</string>
+    <string name="assist_error_model">The model call failed</string>
+    <string name="assist_error_cancelled">Cancelled</string>
+    <string name="assist_error_no_text">There is nothing to work with</string>
+
+    <string name="assist_status_gathering">Reading the screen…</string>
+    <string name="assist_status_thinking">Thinking…</string>
+    <string name="assist_status_retrying">Retrying the model call…</string>
+
+    <string name="assist_card_copy">Copy</string>
+    <string name="assist_card_share">Share</string>
+    <string name="assist_card_ask">Ask</string>
+    <string name="assist_card_close">Close</string>
+    <string name="assist_card_stop">Stop</string>
+    <string name="assist_card_retry">Retry</string>
+    <string name="assist_card_share_chooser">Share result</string>
+    <string name="assist_copied">Copied</string>
+    <string name="assist_copy_failed">Could not copy</string>
+
+    <string name="assist_ask_hint">Ask a follow-up</string>
+    <string name="assist_ask_send">Send</string>
+
+    <string name="assist_action_sheet_title">Actions</string>
+    <string name="assist_action_navigate">Navigate</string>
+    <string name="assist_action_calendar">Add to calendar</string>
+    <string name="assist_action_dial">Call</string>
+    <string name="assist_action_copy">Copy</string>
+
+    <string name="assist_voice_hold">Hold to talk</string>
+    <string name="assist_voice_recording">Recording… release to transcribe</string>
+    <string name="assist_voice_transcribing">Transcribing…</string>
+
+    <string name="assist_history_title">History</string>
+    <string name="assist_history_empty">No history yet</string>
+    <string name="assist_history_delete">Delete</string>
+    <string name="assist_history_clear">Clear all</string>
+
+    <string name="assist_settings_enable">Show floating assistant</string>
+    <string name="assist_settings_privacy">Screen content is read only when you start a task. History stays on this device.</string>
+    <string name="assist_settings_accessibility">Accessibility</string>
+    <string name="assist_settings_overlay">Display over other apps</string>
+    <string name="assist_settings_model">Model connection</string>
+    <string name="assist_notice_title">About the floating assistant</string>
+    <string name="assist_notice_body">Screen content is read only when you start a task, and results stay on this device by default.</string>
+    <string name="assist_notice_ok">Got it</string>
+    <string name="assist_permission_overlay">Allow display over other apps</string>
+    <string name="assist_permission_a11y">Turn on accessibility</string>
+</resources>

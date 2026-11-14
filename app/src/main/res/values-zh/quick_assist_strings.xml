@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="assist_service_label">快捷助手</string>
+    <string name="assist_channel">快捷助手</string>
+    <string name="assist_running">悬浮快捷助手已就绪</string>
+    <string name="assist_notification_open">打开快捷助手设置</string>
+
+    <string name="assist_menu_title">快捷助手</string>
+    <string name="assist_menu_back">返回</string>
+    <string name="assist_menu_close">关闭</string>
+    <string name="assist_group_screen">屏幕</string>
+    <string name="assist_group_web">网页</string>
+    <string name="assist_group_text">文本</string>
+    <string name="assist_group_image">图片</string>
+    <string name="assist_group_voice">语音</string>
+
+    <string name="assist_task_screen_summarize">总结当前屏幕</string>
+    <string name="assist_task_screen_extract">提取屏幕文字</string>
+    <string name="assist_task_screen_translate">翻译当前屏幕</string>
+    <string name="assist_task_screen_what">这是什么</string>
+    <string name="assist_task_screen_actions">查找可执行信息</string>
+    <string name="assist_task_clip_summarize">总结剪贴板</string>
+    <string name="assist_task_clip_polish">润色或纠错</string>
+    <string name="assist_task_image_ocr">图片取字</string>
+    <string name="assist_task_image_explain">图片解说</string>
+    <string name="assist_task_image_qr">识别二维码</string>
+    <string name="assist_task_web_summarize">总结网页正文</string>
+    <string name="assist_task_web_ask">就本文提问</string>
+    <string name="assist_task_voice_transcribe">语音转写</string>
+    <string name="assist_task_pdf_summarize">总结 PDF</string>
+
+    <string name="assist_unavailable_a11y">开启无障碍以读取屏幕</string>
+    <string name="assist_unavailable_overlay">允许显示在其他应用上层后即可使用悬浮助手</string>
+    <string name="assist_unavailable_model">未连接，点此去连接</string>
+    <string name="assist_unavailable_vision">当前模型不支持读图</string>
+    <string name="assist_unavailable_voice">没有可用的语音引擎</string>
+    <string name="assist_unavailable_clipboard">剪贴板为空</string>
+    <string name="assist_unavailable_image">尚未选择图片</string>
+
+    <string name="assist_error_secure_screen">该页面禁止截图</string>
+    <string name="assist_error_screen_unreadable">当前页面无法读取</string>
+    <string name="assist_error_network">网络失败，请重试</string>
+    <string name="assist_error_model">模型调用失败</string>
+    <string name="assist_error_cancelled">已取消</string>
+    <string name="assist_error_no_text">没有可处理的内容</string>
+
+    <string name="assist_status_gathering">正在读取屏幕…</string>
+    <string name="assist_status_thinking">正在思考…</string>
+    <string name="assist_status_retrying">正在重试模型调用…</string>
+
+    <string name="assist_card_copy">复制</string>
+    <string name="assist_card_share">分享</string>
+    <string name="assist_card_ask">追问</string>
+    <string name="assist_card_close">关闭</string>
+    <string name="assist_card_stop">停止</string>
+    <string name="assist_card_retry">重试</string>
+    <string name="assist_card_share_chooser">分享结果</string>
+    <string name="assist_copied">已复制</string>
+    <string name="assist_copy_failed">复制失败</string>
+
+    <string name="assist_ask_hint">继续追问</string>
+    <string name="assist_ask_send">发送</string>
+
+    <string name="assist_action_sheet_title">可执行动作</string>
+    <string name="assist_action_navigate">导航</string>
+    <string name="assist_action_calendar">建日程</string>
+    <string name="assist_action_dial">拨号</string>
+    <string name="assist_action_copy">复制</string>
+
+    <string name="assist_voice_hold">按住说话</string>
+    <string name="assist_voice_recording">正在录音… 松手转写</string>
+    <string name="assist_voice_transcribing">正在转写…</string>
+
+    <string name="assist_history_title">历史记录</string>
+    <string name="assist_history_empty">暂无历史记录</string>
+    <string name="assist_history_delete">删除</string>
+    <string name="assist_history_clear">一键清空</string>
+
+    <string name="assist_settings_enable">显示悬浮助手</string>
+    <string name="assist_settings_privacy">只有你主动触发任务时才会读取屏幕内容，历史默认仅保存在本机。</string>
+    <string name="assist_settings_accessibility">无障碍</string>
+    <string name="assist_settings_overlay">显示在其他应用上层</string>
+    <string name="assist_settings_model">模型连接</string>
+    <string name="assist_notice_title">关于悬浮助手</string>
+    <string name="assist_notice_body">只有你主动触发任务时才会读取屏幕内容，结果默认仅保存在本机。</string>
+    <string name="assist_notice_ok">知道了</string>
+    <string name="assist_permission_overlay">允许显示在其他应用上层</string>
+    <string name="assist_permission_a11y">开启无障碍</string>
+</resources>
