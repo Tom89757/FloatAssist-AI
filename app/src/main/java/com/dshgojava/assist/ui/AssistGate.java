@@ -34,6 +34,9 @@ public final class AssistGate {
         Objects.requireNonNull(capabilities, "capabilities");
         boolean needsAccessibility = task.source() == SourceKind.SCREEN
                 || (task.source() == SourceKind.WEB && !TaskRegistry.isClipboardWeb(task));
+        if (task.source() == SourceKind.ROLE) {
+            return AssistMenuModel.Block.NONE;
+        }
         if (needsAccessibility && !capabilities.accessibility()) {
             return AssistMenuModel.Block.ACCESSIBILITY;
         }

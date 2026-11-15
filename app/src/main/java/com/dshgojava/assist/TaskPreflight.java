@@ -78,6 +78,7 @@ public final class TaskPreflight {
             case CLIP -> "剪贴板不可用";
             case IMAGE -> "尚未选择图片";
             case VOICE -> "没有可用的语音引擎";
+            case ROLE -> "角色选择不可用";
             case NONE -> "当前任务不可用";
         };
     }

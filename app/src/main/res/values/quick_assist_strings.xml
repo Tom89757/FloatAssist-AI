@@ -19,6 +19,23 @@
     <string name="assist_group_text">Text</string>
     <string name="assist_group_image">Image</string>
     <string name="assist_group_voice">Voice</string>
+    <string name="assist_group_role">Role</string>
+    <string name="assist_role_selected">Switched to role: %1$s</string>
+    <string name="assist_role_create_failed">Could not open the role editor</string>
+    <string name="assist_role_edit_title">New role</string>
+    <string name="assist_role_identity">Role identity (also the display name)</string>
+    <string name="assist_role_identity_hint">e.g. senior stock analyst</string>
+    <string name="assist_role_expertise">Expertise</string>
+    <string name="assist_role_tone">Tone</string>
+    <string name="assist_role_output">Output contract</string>
+    <string name="assist_role_guardrails">Guardrails</string>
+    <string name="assist_role_generate">Generate from identity</string>
+    <string name="assist_role_save">Save and use</string>
+    <string name="assist_role_cancel">Cancel</string>
+    <string name="assist_role_generating">Generating…</string>
+    <string name="assist_role_generate_failed">Generation failed; check model settings</string>
+    <string name="assist_role_empty_identity">Enter a role identity first</string>
+    <string name="assist_role_model_unconfigured">No model configured, cannot auto-generate</string>
 
     <string name="assist_task_screen_summarize">Summarize screen</string>
     <string name="assist_task_screen_extract">Extract screen text</string>

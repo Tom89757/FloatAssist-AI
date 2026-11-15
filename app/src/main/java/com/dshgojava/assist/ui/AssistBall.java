@@ -48,7 +48,7 @@ public final class AssistBall {
     private final WindowManager windows;
     private final int windowType;
     private final Supplier<BallGeometry.SafeArea> safeArea;
-    private final AssistMenuModel model;
+    private AssistMenuModel model;
     private final AssistMenuModel.TaskGate gate;
     private final Listener listener;
     private final OverlayBall ball;
@@ -108,6 +108,11 @@ public final class AssistBall {
     /** Side the ball is docked to; the result card enters from the same edge. */
     public BallGeometry.Side side() {
         return ball.dock().side();
+    }
+
+    /** Replaces the menu model; the next opened menu reflects the new rows. */
+    public void updateModel(AssistMenuModel nextModel) {
+        if (nextModel != null) this.model = nextModel;
     }
 
     /** Called on the main thread by the accessibility screenshot guard. */

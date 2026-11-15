@@ -16,7 +16,8 @@ public final class AssistMenuModel {
         SCREEN(SourceKind.SCREEN),
         WEB(SourceKind.WEB),
         TEXT(SourceKind.CLIP),
-        IMAGE(SourceKind.IMAGE);
+        IMAGE(SourceKind.IMAGE),
+        ROLE(SourceKind.ROLE);
 
         private final SourceKind source;
 
@@ -93,6 +94,14 @@ public final class AssistMenuModel {
     public static AssistMenuModel all() {
         List<QuickTask> tasks = new ArrayList<>(TaskRegistry.all());
         tasks.add(TaskRegistry.imagePicker());
+        return new AssistMenuModel(tasks);
+    }
+
+    /** Full menu including the role selector rows (defaults + custom + reset + create). */
+    public static AssistMenuModel all(List<com.dshgojava.assist.role.Role> customRoles) {
+        List<QuickTask> tasks = new ArrayList<>(TaskRegistry.all());
+        tasks.add(TaskRegistry.imagePicker());
+        tasks.addAll(com.dshgojava.assist.role.RoleMenu.tasks(customRoles));
         return new AssistMenuModel(tasks);
     }
 

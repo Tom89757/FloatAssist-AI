@@ -2,6 +2,9 @@ package com.dshgojava.assist.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.dshgojava.assist.OutputKind;
+import com.dshgojava.assist.QuickTask;
+import com.dshgojava.assist.SourceKind;
 import com.dshgojava.assist.TaskRegistry;
 import org.junit.jupiter.api.Test;
 
@@ -79,6 +82,15 @@ class AssistGateTest {
                 AssistGate.blockFor(TaskRegistry.imagePicker(), noImage));
         assertEquals(AssistMenuModel.Block.SOURCE,
                 AssistGate.blockFor(TaskRegistry.require("image.ocr"), noImage));
+    }
+
+    @Test
+    void roleTasksAreAlwaysAvailable() {
+        AssistGate.Capabilities minimal = caps(false, false, false, false, false);
+
+        assertEquals(AssistMenuModel.Block.NONE, AssistGate.blockFor(
+                new QuickTask("role.stock", "股票投资", SourceKind.ROLE,
+                        OutputKind.TEXT_CARD, "{{text}}", false), minimal));
     }
 
     @Test

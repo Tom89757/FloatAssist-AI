@@ -280,6 +280,7 @@ public final class AssistMenuView extends FrameLayout {
             case WEB -> getContext().getString(R.string.assist_group_web);
             case TEXT -> getContext().getString(R.string.assist_group_text);
             case IMAGE -> getContext().getString(R.string.assist_group_image);
+            case ROLE -> getContext().getString(R.string.assist_group_role);
         };
     }
 

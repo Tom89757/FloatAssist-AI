@@ -18,7 +18,7 @@ class QuickAssistDataContractTest {
     @Test
     void enumsExposeTheContractValues() {
         assertEquals(
-                List.of("SCREEN", "WEB", "CLIP", "IMAGE", "VOICE", "NONE"),
+                List.of("SCREEN", "WEB", "CLIP", "IMAGE", "VOICE", "ROLE", "NONE"),
                 names(SourceKind.values()));
         assertEquals(
                 List.of("TEXT_CARD", "COPY_TEXT", "TRANSLATE_CARD", "ACTION_SHEET"),

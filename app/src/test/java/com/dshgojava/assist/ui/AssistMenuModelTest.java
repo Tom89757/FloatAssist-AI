@@ -17,15 +17,16 @@ class AssistMenuModelTest {
     private static final AssistMenuModel MODEL = AssistMenuModel.p0();
 
     @Test
-    void p0HasFourGroupsAndAllEightTasks() {
+    void p0HasFiveGroupsAndAllEightTasks() {
         List<AssistMenuModel.GroupRow> groups = MODEL.groups(AssistMenuModel.TaskGate.allowAll());
 
-        assertEquals(4, groups.size());
+        assertEquals(5, groups.size());
         assertEquals(List.of(
                         AssistMenuModel.Group.SCREEN,
                         AssistMenuModel.Group.WEB,
                         AssistMenuModel.Group.TEXT,
-                        AssistMenuModel.Group.IMAGE),
+                        AssistMenuModel.Group.IMAGE,
+                        AssistMenuModel.Group.ROLE),
                 groups.stream().map(AssistMenuModel.GroupRow::group).toList());
 
         Set<String> ids = new HashSet<>();
@@ -98,7 +99,8 @@ class AssistMenuModelTest {
     void everyTaskIsEnabledWhenGateAllows() {
         for (AssistMenuModel.GroupRow group
                 : MODEL.groups(AssistMenuModel.TaskGate.allowAll())) {
-            if (group.group() == AssistMenuModel.Group.WEB) continue;
+            if (group.group() == AssistMenuModel.Group.WEB
+                    || group.group() == AssistMenuModel.Group.ROLE) continue;
             assertTrue(group.available(), group.group().name());
             assertEquals(group.tasks().size(), group.availableCount());
             assertTrue(group.tasks().stream().allMatch(AssistMenuModel.TaskRow::enabled));

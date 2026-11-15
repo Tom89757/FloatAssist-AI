@@ -7,5 +7,6 @@ public enum SourceKind {
     CLIP,
     IMAGE,
     VOICE,
+    ROLE,
     NONE
 }

@@ -42,6 +42,9 @@ import com.dshgojava.assist.model.DirectApiModelChannel;
 import com.dshgojava.assist.model.ModelChannel;
 import com.dshgojava.assist.model.NullModelChannel;
 import com.dshgojava.assist.platform.BallGeometry;
+import com.dshgojava.assist.role.Role;
+import com.dshgojava.assist.role.RoleMenu;
+import com.dshgojava.assist.role.RoleStore;
 import com.dshgojava.assist.source.AssistSource;
 import com.dshgojava.assist.source.ClipSource;
 import com.dshgojava.assist.source.ImageSource;
@@ -57,6 +60,7 @@ import com.dshgojava.assist.ui.AssistGate;
 import com.dshgojava.assist.ui.AssistMenuModel;
 import com.dshgojava.assist.ui.AssistSettingsActivity;
 import com.dshgojava.assist.ui.AssistVoiceHud;
+import com.dshgojava.assist.ui.RoleEditActivity;
 import com.dshgojava.assist.voice.VoiceCapture;
 import com.dshgojava.assist.voice.VoicePolicy;
 import java.util.EnumMap;
@@ -92,6 +96,7 @@ public final class AssistOverlayService extends Service {
     private final AssistMenuModel.TaskGate gate = this::blockFor;
     private AssistPrefs prefs;
     private AssistHistoryStore history;
+    private RoleStore roleStore;
     private ExecutorService io;
     private Map<SourceKind, AssistSource> sources;
     private AssistMenuModel menuModel;
@@ -152,6 +157,7 @@ public final class AssistOverlayService extends Service {
         super.onCreate();
         prefs = new AssistPrefs(this);
         history = AssistHistoryStore.forApp(this);
+        roleStore = new RoleStore(this);
         io = Executors.newSingleThreadExecutor(runnable ->
                 new Thread(runnable, "assist-settings-io"));
         imageSource = new ImageSource(this);
@@ -167,7 +173,7 @@ public final class AssistOverlayService extends Service {
         available.put(SourceKind.WEB, webSource);
         sources = Map.copyOf(available);
         runner = new DefaultAssistRunner(model, sources);
-        menuModel = AssistMenuModel.all();
+        menuModel = AssistMenuModel.all(roleStore.custom());
         captureRegistration = A11yBridge.registerCaptureOverlay(this::setOverlaysHiddenForCapture);
         a11yConnectionListener = A11yBridge.addConnectionListener(this::onA11yConnectionChanged);
         reloadPreferences();
@@ -422,10 +428,12 @@ public final class AssistOverlayService extends Service {
 
     private void applyPreferences(AssistPrefs.Snapshot snapshot) {
         ModelChannel next = snapshot.model().configured()
-                ? new DirectApiModelChannel(snapshot.model())
+                ? new DirectApiModelChannel(withRole(snapshot.model()))
                 : NullModelChannel.INSTANCE;
         model = next;
         if (sources != null) runner = new DefaultAssistRunner(next, sources);
+        menuModel = AssistMenuModel.all(roleStore.custom());
+        if (ball != null) ball.updateModel(menuModel);
         if (cardLayer != null) {
             AssistCardLayer previous = cardLayer;
             cardLayer = null;
@@ -434,6 +442,36 @@ public final class AssistOverlayService extends Service {
                     ? null : overlayContext.getSystemService(WindowManager.class);
             if (windows != null) cardLayer = createCardLayer(windows, activeChannel.windowType());
         }
+    }
+
+    /** Injects the selected role persona into the model's system prompt. */
+    private DirectApiModelChannel.Config withRole(DirectApiModelChannel.Config base) {
+        String persona = roleStore.selected().persona();
+        String system = persona.isBlank()
+                ? DirectApiModelChannel.DEFAULT_SYSTEM_PROMPT
+                : DirectApiModelChannel.DEFAULT_SYSTEM_PROMPT + "\n\n" + persona;
+        return new DirectApiModelChannel.Config(
+                base.baseUrl(), base.apiKey(), base.model(), base.supportsVision(), system);
+    }
+
+    private void onRoleSelected(String taskId) {
+        if (RoleMenu.CREATE_ID.equals(taskId)) {
+            Intent intent = new Intent(this, RoleEditActivity.class)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            try {
+                startActivity(intent);
+            } catch (RuntimeException error) {
+                toast(R.string.assist_role_create_failed);
+            }
+            return;
+        }
+        String roleId = RoleMenu.NONE_ID.equals(taskId) ? Role.NONE_ID : RoleMenu.roleId(taskId);
+        roleStore.select(roleId);
+        Role role = com.dshgojava.assist.role.RoleCatalog
+                .find(roleId, roleStore.custom()).orElse(com.dshgojava.assist.role.RoleCatalog.none());
+        Log.i(TAG, "role selected: " + roleId + " (" + role.name() + ")");
+        reloadPreferences();
+        toast(getString(R.string.assist_role_selected, role.name()));
     }
 
     private void recordHistory(QuickTask task, String text, boolean followUp) {
@@ -462,7 +500,9 @@ public final class AssistOverlayService extends Service {
     private final AssistBall.Listener ballListener = new AssistBall.Listener() {
         @Override
         public void onTaskSelected(QuickTask task) {
-            if (TaskRegistry.IMAGE_PICK.equals(task.id())) {
+            if (RoleMenu.isRoleTask(task.id())) {
+                onRoleSelected(task.id());
+            } else if (TaskRegistry.IMAGE_PICK.equals(task.id())) {
                 AssistCaptureActivity.pickImage(AssistOverlayService.this, task);
             } else if (task.source() == SourceKind.CLIP || TaskRegistry.isClipboardWeb(task)) {
                 AssistCaptureActivity.readClipboard(AssistOverlayService.this, task);
