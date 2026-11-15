@@ -44,6 +44,9 @@ Java 17；Android 原生 View（XML + Java）；Gradle 8.9 + AGP 8.2.2；`namesp
 7. **编码**：所有 `.java` 文件必须 **UTF-8 无 BOM**（本项目已因 PowerShell BOM 导致编译失败过一次）。
 8. **Git**：不做任何 git 写操作（不 add/commit/push）；进度用进度文件表达。
 9. **验证诚实**：只写实际执行的命令与结果；未运行写"未运行"+ 原因。
+10. **Android API 兼容**：**禁止**使用 Android libcore 缺失的 Java 9+ API —— `Files.readString`、`Files.writeString`、`Files.mismatch`、`Path.of`、`Collectors.teeing`。文本读写统一用 `new String(Files.readAllBytes(path), StandardCharsets.UTF_8)` 与 `Files.write(path, text.getBytes(StandardCharsets.UTF_8))`。这类缺失**在 Android 任何版本都不存在**，编译期未必报错（取决于 JDK），运行期必崩。
+11. **集合与字符串 API**：`List.of`/`Map.of`/`String.isBlank`/`String.strip` 属于 API 30–33 才有的方法，`minSdk 26` 下需确认目标机型；新增代码优先用 `Collections.unmodifiableList`、`trim().isEmpty()` 等低版本安全写法。
+12. **悬浮窗类型**：带金融/银行/支付类应用时必须考虑 `Window.setHideOverlayWindows(true)`（Android 12+）会隐藏全部 `TYPE_APPLICATION_OVERLAY` 窗口。因此悬浮球采用**双通道**：无障碍已连接用 `TYPE_ACCESSIBILITY_OVERLAY`（豁免该开关，且只能用 `AccessibilityService` 作 Context 取 `WindowManager`），否则退回 `TYPE_APPLICATION_OVERLAY`。**球、结果卡片、语音 HUD、菜单必须使用同一通道**；切换通道时重建窗口但**不重启前台服务**。悬浮窗可见不等于能读屏（`FLAG_SECURE` 页面仍取不到内容）。
 
 ## 6. 命令
 
@@ -64,7 +67,7 @@ Windows 下需设置 `JAVA_HOME` 为 JDK 17（`gradle.properties` 已固定 `org
 | QA02 | 任务注册表 | `TaskRegistry`（P0 8 条）+ 模板填充 + 前置失败判断 + JUnit |
 | QA03 | 模型通道 | `PromptImage`/`ModelChannel`/`DirectApiModelChannel`（OkHttp + SSE 流式）/`NullModelChannel` + SSE 解析测试 |
 | QA04 | 调度器 | `AssistRunner`/`DefaultAssistRunner`（取料→拼提示→模型→状态机）+ JUnit |
-| QA05 | 悬浮球 | `AssistOverlayService`（前台服务）+ `AssistBall` + `AssistMenuView` |
+| QA05 | 悬浮球 | `AssistOverlayService`（前台服务，**无障碍覆盖层 / 应用悬浮窗双通道**）+ `AssistBall` + `AssistMenuView` |
 | QA06 | 结果卡片 | `AssistCardView`/`AssistCardLayer`/`AssistAskBar`（流式、复制、分享、追问 1 轮） |
 | QA07 | 屏幕组任务 | `screen.summarize`/`screen.extract`/`screen.translate`/`screen.what` 端到端 |
 | QA08 | 文本与图片组 | `clip.summarize`/`clip.polish`/`image.ocr`/`image.explain` |

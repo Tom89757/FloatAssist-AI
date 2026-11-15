@@ -256,13 +256,36 @@ P1 追加：`web.summarize`、`web.ask`、`voice.transcribe`、`image.qr`（ZXin
 
 追问条必须 `FLAG_WATCH_OUTSIDE_TOUCH` + `SOFT_INPUT_ADJUST_NOTHING`，并监听 `WindowInsets.Type.ime()`（参考 `AskBarView`）。系统栏 insets 存在"重排期间短暂变 0"的问题，必须做**忽略回退 + 缓存上次有效值**（同 `ChatHomeView` 的 `resolveInset` 策略）。
 
-### 8.7 会话与上下文
+### 8.7 悬浮层双通道（无障碍覆盖层优先）
+
+**问题**：Android 12（API 31）起，**任何应用**都可以调用 `Window.setHideOverlayWindows(true)`，系统会立刻隐藏所有 `TYPE_APPLICATION_OVERLAY` 窗口。金融、银行、支付类应用在行情／交易／持仓等敏感页普遍启用它，于是"球在微信能看到、在东方财富看不到"。这是系统级安全策略，**无法绕过，也不应该绕过**（它的目的就是防止悬浮窗遮挡交易确认与密码输入）。
+
+**解法**：用两种窗口类型，按无障碍是否连接自动选：
+
+| 通道 | 窗口类型 | 值 | 会被 `setHideOverlayWindows` 隐藏 | 前置条件 |
+| --- | --- | --- | --- | --- |
+| ACCESSIBILITY | `TYPE_ACCESSIBILITY_OVERLAY` | 2032 | **不会**（受信任的辅助功能窗口） | 无障碍服务已连接 |
+| APPLICATION | `TYPE_APPLICATION_OVERLAY` | 2038 | 会 | `SYSTEM_ALERT_WINDOW` 已授权 |
+
+选择规则（`AssistOverlayService.preferredChannel()`）：无障碍已连接 → ACCESSIBILITY；否则 → APPLICATION。
+
+**实现要点**：
+
+1. App 侧的 `WindowManager` 无法创建 `TYPE_ACCESSIBILITY_OVERLAY`，必须用 `AccessibilityService` 实例作为 `Context` 取 `WindowManager`（`A11yBridge.service().getSystemService(WindowManager.class)`）。
+2. 球、结果卡片、语音 HUD、菜单**必须使用同一个通道**，否则会出现一部分窗口可见、一部分被隐藏。
+3. 无障碍连接／断开时**不重启前台服务**，只重建窗口：`A11yBridge.addConnectionListener(...)` → `rebuildOverlay(kind)`，先 `detach` 旧窗口再按新通道 `createBall()`。
+4. 通道不可用时按通道给不同引导：无障碍通道 → 无障碍设置；应用悬浮窗通道 → `ACTION_MANAGE_OVERLAY_PERMISSION`。
+5. **降级行为**：两者都不可用时，服务不启动并发出通知，绝不静默失败。
+
+**能力边界**（务必告知用户）：悬浮窗可见 ≠ 能读屏。金融 App 的 `FLAG_SECURE` 页面既禁截图也禁无障碍取树，此时屏幕组任务仍会返回 `assist_error_secure_screen`。
+
+### 8.8 会话与上下文
 
 P0 的 `DirectApiModelChannel` **不走服务端会话**：每次任务组装一条 `messages` 数组（system + user）直接请求 `/v1/chat/completions`，无状态、无会话垃圾。只有"追问 1 轮"时把上一轮结果并入 `messages` 再发一次。
 
 API key 与 baseUrl 由设置页写入（`AssistPrefs`），存储用 `EncryptedSharedPreferences`（`androidx.security:security-crypto`）或最简的私有目录文件 + `MODE_PRIVATE`；**不得**写进日志或历史记录。
 
-### 8.8 未连接 / 无模型的显式失败
+### 8.9 未连接 / 无模型的显式失败
 
 `NullModelChannel.ready()` 返回 `false`，`complete` 直接 `failedFuture(new IllegalStateException("未配置模型"))`。UI 显示"未连接，点此去设置"，**不允许静默无响应**。
 
