@@ -3,9 +3,9 @@ package com.dshgojava.assist;
 import java.util.Objects;
 
 /**
- * A structured action offered below a result card. {@code value} carries the
- * navigation URI, calendar payload, phone number or text to copy, depending on
- * {@link Kind}.
+ * A structured action offered below a result card. {@code value} carries a
+ * geo/map URI for navigation, a {@code CalendarDraft} JSON payload, a
+ * normalised phone number, or text to copy, depending on {@link Kind}.
  */
 public record AssistAction(Kind kind, String label, String value) {
     public enum Kind {
