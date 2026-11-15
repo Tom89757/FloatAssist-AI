@@ -431,10 +431,10 @@ public final class AssistCardView extends FrameLayout {
                 || lastResult.text().isBlank()) {
             return;
         }
-        listener.onAskOpened();
         askBar.clear();
         askBar.setBusy(false);
         askBar.setVisibility(VISIBLE);
+        listener.onAskOpened();
         askBar.open();
     }
 

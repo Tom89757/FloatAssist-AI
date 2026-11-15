@@ -115,12 +115,13 @@ public final class AssistAskBar extends LinearLayout {
     }
 
     public void open() {
-        setVisibility(VISIBLE);
-        input.requestFocus();
-        post(() -> {
+        postDelayed(() -> {
+            input.requestFocus();
             InputMethodManager imm = getContext().getSystemService(InputMethodManager.class);
-            if (imm != null) imm.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT);
-        });
+            if (imm != null) {
+                imm.showSoftInput(input, InputMethodManager.SHOW_FORCED);
+            }
+        }, 120L);
     }
 
     public void close() {

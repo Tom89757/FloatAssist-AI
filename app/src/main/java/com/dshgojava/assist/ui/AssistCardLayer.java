@@ -295,7 +295,8 @@ public final class AssistCardLayer implements AssistCardView.Listener,
         if (card == null || params == null || dismissing) return;
         asking = true;
         params.flags &= ~WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
-        params.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING;
+        params.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE
+                | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING;
         updateWindow();
     }
 
