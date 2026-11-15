@@ -1,13 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="assist_service_label">快捷助手</string>
+    <string name="assist_accessibility_description">仅在你主动触发快捷任务时读取当前屏幕，不会在后台操控其它应用。</string>
     <string name="assist_channel">快捷助手</string>
+    <string name="assist_permission_channel">快捷助手权限</string>
     <string name="assist_running">悬浮快捷助手已就绪</string>
     <string name="assist_notification_open">打开快捷助手设置</string>
 
     <string name="assist_menu_title">快捷助手</string>
     <string name="assist_menu_back">返回</string>
     <string name="assist_menu_close">关闭</string>
+    <string name="assist_menu_task_count">%1$d 个任务</string>
+    <string name="assist_menu_available_count">%1$d/%2$d 可用</string>
+    <string name="assist_menu_coming_soon">暂未开放</string>
+    <string name="assist_menu_source_unavailable">当前来源尚不可用</string>
     <string name="assist_group_screen">屏幕</string>
     <string name="assist_group_web">网页</string>
     <string name="assist_group_text">文本</string>
@@ -31,11 +37,25 @@
 
     <string name="assist_unavailable_a11y">开启无障碍以读取屏幕</string>
     <string name="assist_unavailable_overlay">允许显示在其他应用上层后即可使用悬浮助手</string>
+    <string name="assist_unavailable_a11y_overlay">开启无障碍后，悬浮球可显示在会隐藏应用悬浮窗的应用上层</string>
     <string name="assist_unavailable_model">未连接，点此去连接</string>
     <string name="assist_unavailable_vision">当前模型不支持读图</string>
     <string name="assist_unavailable_voice">没有可用的语音引擎</string>
     <string name="assist_unavailable_clipboard">剪贴板为空</string>
     <string name="assist_unavailable_image">尚未选择图片</string>
+    <string name="assist_settings_pending">设置页尚未接入，请稍后再连接模型。</string>
+    <string name="assist_capture_unavailable">无法打开快捷助手的取料窗口</string>
+    <string name="assist_clipboard_unavailable">剪贴板为空，或系统当前不允许读取剪贴板</string>
+    <string name="assist_clipboard_empty">剪贴板没有可处理的文字</string>
+    <string name="assist_image_picker_unavailable">系统没有可用的图片选择器</string>
+    <string name="assist_image_pick_failed">无法读取所选图片</string>
+    <string name="assist_image_too_large">图片过大，无法安全处理</string>
+    <string name="assist_image_not_supported">分享的内容不是图片</string>
+    <string name="assist_image_first_only">一次只处理第一张图片</string>
+    <string name="assist_image_share_choose">选择图片任务</string>
+    <string name="assist_task_pending">结果卡片接入后即可执行任务。</string>
+    <string name="assist_voice_pending">按住说话尚未开放。</string>
+    <string name="assist_overlay_attach_failed">无法显示悬浮助手，请检查“显示在其他应用上层”权限。</string>
 
     <string name="assist_error_secure_screen">该页面禁止截图</string>
     <string name="assist_error_screen_unreadable">当前页面无法读取</string>
@@ -45,6 +65,9 @@
     <string name="assist_error_no_text">没有可处理的内容</string>
 
     <string name="assist_status_gathering">正在读取屏幕…</string>
+    <string name="assist_status_clipboard">正在读取剪贴板…</string>
+    <string name="assist_status_image">正在读取所选图片…</string>
+    <string name="assist_status_voice">正在整理语音转写…</string>
     <string name="assist_status_thinking">正在思考…</string>
     <string name="assist_status_retrying">正在重试模型调用…</string>
 
@@ -55,21 +78,35 @@
     <string name="assist_card_stop">停止</string>
     <string name="assist_card_retry">重试</string>
     <string name="assist_card_share_chooser">分享结果</string>
+    <string name="assist_card_window_title">快捷助手结果</string>
+    <string name="assist_card_drag">下滑关闭</string>
     <string name="assist_copied">已复制</string>
     <string name="assist_copy_failed">复制失败</string>
+    <string name="assist_share_failed">没有可分享结果的应用</string>
 
     <string name="assist_ask_hint">继续追问</string>
     <string name="assist_ask_send">发送</string>
+    <string name="assist_ask_cancel">取消</string>
+    <string name="assist_followup_limit">仅支持 1 轮追问</string>
+    <string name="assist_followup_used">该结果已使用过唯一一次追问</string>
+    <string name="assist_followup_empty">请先输入追问内容</string>
 
     <string name="assist_action_sheet_title">可执行动作</string>
     <string name="assist_action_navigate">导航</string>
     <string name="assist_action_calendar">建日程</string>
     <string name="assist_action_dial">拨号</string>
     <string name="assist_action_copy">复制</string>
+    <string name="assist_action_none">未识别到可用的地址、时间或电话号码。</string>
+    <string name="assist_action_incomplete">动作信息不完整，无法打开。</string>
+    <string name="assist_action_no_handler">设备上没有可打开此动作的应用。</string>
 
     <string name="assist_voice_hold">按住说话</string>
     <string name="assist_voice_recording">正在录音… 松手转写</string>
     <string name="assist_voice_transcribing">正在转写…</string>
+    <string name="assist_voice_hud_title">语音输入</string>
+    <string name="assist_voice_mic_required">需要麦克风权限才能按住说话</string>
+    <string name="assist_voice_failed">语音转写失败，请重试。</string>
+    <string name="assist_voice_no_speech">没有识别到语音，请重试。</string>
 
     <string name="assist_history_title">历史记录</string>
     <string name="assist_history_empty">暂无历史记录</string>
@@ -80,10 +117,54 @@
     <string name="assist_settings_privacy">只有你主动触发任务时才会读取屏幕内容，历史默认仅保存在本机。</string>
     <string name="assist_settings_accessibility">无障碍</string>
     <string name="assist_settings_overlay">显示在其他应用上层</string>
+    <string name="assist_settings_microphone">麦克风（按住说话）</string>
+    <string name="assist_settings_open_microphone">开启麦克风权限</string>
+    <string name="assist_settings_mic_denied">未授予麦克风权限，请到应用设置中开启。</string>
     <string name="assist_settings_model">模型连接</string>
     <string name="assist_notice_title">关于悬浮助手</string>
     <string name="assist_notice_body">只有你主动触发任务时才会读取屏幕内容，结果默认仅保存在本机。</string>
     <string name="assist_notice_ok">知道了</string>
     <string name="assist_permission_overlay">允许显示在其他应用上层</string>
     <string name="assist_permission_a11y">开启无障碍</string>
+
+    <string name="assist_menu_settings">设置</string>
+    <string name="assist_settings_title">快捷助手设置</string>
+    <string name="assist_settings_overlay_section">悬浮助手</string>
+    <string name="assist_settings_open_overlay">打开悬浮窗权限设置</string>
+    <string name="assist_settings_open_a11y">打开无障碍设置</string>
+    <string name="assist_settings_notifications">通知</string>
+    <string name="assist_settings_open_notifications">通知设置</string>
+    <string name="assist_settings_base_url">接口地址</string>
+    <string name="assist_settings_base_url_hint">https://api.openai.com/v1</string>
+    <string name="assist_settings_model_name">模型名称</string>
+    <string name="assist_settings_model_hint">例如 gpt-4o-mini</string>
+    <string name="assist_settings_api_key">API 密钥</string>
+    <string name="assist_settings_api_key_hint">留空则保留已保存的密钥</string>
+    <string name="assist_settings_supports_vision">当前模型支持读图</string>
+    <string name="assist_settings_save">保存模型设置</string>
+    <string name="assist_settings_clear_key">清除 API 密钥</string>
+    <string name="assist_settings_key_saved">API 密钥已保存在本机私有存储，不会再次回显。</string>
+    <string name="assist_settings_key_missing">尚未保存 API 密钥。</string>
+    <string name="assist_settings_key_cleared">已清除 API 密钥；保存新密钥前任务将保持灰显。</string>
+    <string name="assist_settings_connected">已连接，任务入口可用。</string>
+    <string name="assist_settings_disconnected">未连接：请填写接口地址、模型名称和 API 密钥；任务入口会保持灰显。</string>
+    <string name="assist_settings_saved_connected">已保存并连接，任务入口可用。</string>
+    <string name="assist_settings_saved_disconnected">已保存，但仍未连接：请补全接口地址、模型名称和 API 密钥。</string>
+    <string name="assist_settings_invalid_url">接口地址必须以 http:// 或 https:// 开头。</string>
+    <string name="assist_settings_save_failed">保存设置失败，请重试。</string>
+    <string name="assist_settings_load_failed">读取设置失败，请重试。</string>
+    <string name="assist_settings_overlay_required">请先允许“显示在其他应用上层”，再开启悬浮助手。</string>
+    <string name="assist_settings_overlay_start_failed">无法启动悬浮助手，请检查权限后重试。</string>
+    <string name="assist_settings_overlay_running">已允许悬浮窗，悬浮助手正在运行。</string>
+    <string name="assist_settings_overlay_allowed">已允许悬浮窗，悬浮助手尚未运行。</string>
+    <string name="assist_settings_overlay_blocked">尚未允许“显示在其他应用上层”。</string>
+    <string name="assist_settings_status_on">已开启</string>
+    <string name="assist_settings_status_off">未开启</string>
+    <string name="assist_settings_settings_unavailable">系统没有可用的设置页。</string>
+    <string name="assist_history_load_failed">读取本地历史记录失败。</string>
+    <string name="assist_history_delete_failed">删除历史记录失败，请重试。</string>
+    <string name="assist_history_clear_failed">清空历史记录失败，请重试。</string>
+    <string name="assist_history_clear_confirm_title">清空全部历史记录？</string>
+    <string name="assist_history_clear_confirm_message">所有本地历史记录将被永久删除。</string>
+    <string name="assist_history_follow_up_title">%1$s · 追问</string>
 </resources>

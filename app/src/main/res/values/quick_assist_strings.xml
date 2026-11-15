@@ -1,13 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="assist_service_label">Quick assist</string>
+    <string name="assist_accessibility_description">Reads the current screen only when you start a quick task. It never operates other apps in the background.</string>
     <string name="assist_channel">Quick assist</string>
+    <string name="assist_permission_channel">Quick assist permissions</string>
     <string name="assist_running">The floating quick assistant is ready</string>
     <string name="assist_notification_open">Open quick assist settings</string>
 
     <string name="assist_menu_title">Quick assist</string>
     <string name="assist_menu_back">Back</string>
     <string name="assist_menu_close">Close</string>
+    <string name="assist_menu_task_count">%1$d tasks</string>
+    <string name="assist_menu_available_count">%1$d of %2$d available</string>
+    <string name="assist_menu_coming_soon">Coming soon</string>
+    <string name="assist_menu_source_unavailable">This source is not available yet</string>
     <string name="assist_group_screen">Screen</string>
     <string name="assist_group_web">Web</string>
     <string name="assist_group_text">Text</string>
@@ -31,11 +37,25 @@
 
     <string name="assist_unavailable_a11y">Turn on accessibility to read the screen</string>
     <string name="assist_unavailable_overlay">Allow display over other apps to use the floating assistant</string>
+    <string name="assist_unavailable_a11y_overlay">Turn on accessibility so the ball can float above apps that hide app overlays</string>
     <string name="assist_unavailable_model">Not connected. Tap to connect.</string>
     <string name="assist_unavailable_vision">The current model cannot read images</string>
     <string name="assist_unavailable_voice">No speech engine is available</string>
     <string name="assist_unavailable_clipboard">The clipboard is empty</string>
     <string name="assist_unavailable_image">No image is selected</string>
+    <string name="assist_settings_pending">The settings page is not connected yet. Try again after settings is available.</string>
+    <string name="assist_capture_unavailable">The system could not open the quick-assist capture window</string>
+    <string name="assist_clipboard_unavailable">The clipboard is empty or Android does not allow reading it right now</string>
+    <string name="assist_clipboard_empty">The clipboard has no text to process</string>
+    <string name="assist_image_picker_unavailable">No system image picker is available</string>
+    <string name="assist_image_pick_failed">Could not read the selected image</string>
+    <string name="assist_image_too_large">The image is too large to process safely</string>
+    <string name="assist_image_not_supported">The shared item is not an image</string>
+    <string name="assist_image_first_only">Only the first image will be processed</string>
+    <string name="assist_image_share_choose">Choose an image task</string>
+    <string name="assist_task_pending">Task execution will be enabled when the result card is connected.</string>
+    <string name="assist_voice_pending">Hold-to-talk is not available yet.</string>
+    <string name="assist_overlay_attach_failed">Could not show the floating assistant. Check display-over-other-apps permission.</string>
 
     <string name="assist_error_secure_screen">This screen does not allow screenshots</string>
     <string name="assist_error_screen_unreadable">This screen cannot be read</string>
@@ -45,6 +65,9 @@
     <string name="assist_error_no_text">There is nothing to work with</string>
 
     <string name="assist_status_gathering">Reading the screen…</string>
+    <string name="assist_status_clipboard">Reading the clipboard…</string>
+    <string name="assist_status_image">Reading the selected image…</string>
+    <string name="assist_status_voice">Preparing the voice transcript…</string>
     <string name="assist_status_thinking">Thinking…</string>
     <string name="assist_status_retrying">Retrying the model call…</string>
 
@@ -55,21 +78,35 @@
     <string name="assist_card_stop">Stop</string>
     <string name="assist_card_retry">Retry</string>
     <string name="assist_card_share_chooser">Share result</string>
+    <string name="assist_card_window_title">Quick assist result</string>
+    <string name="assist_card_drag">Drag down to close</string>
     <string name="assist_copied">Copied</string>
     <string name="assist_copy_failed">Could not copy</string>
+    <string name="assist_share_failed">No app can share this result</string>
 
     <string name="assist_ask_hint">Ask a follow-up</string>
     <string name="assist_ask_send">Send</string>
+    <string name="assist_ask_cancel">Cancel</string>
+    <string name="assist_followup_limit">One follow-up only</string>
+    <string name="assist_followup_used">This result already used its one follow-up</string>
+    <string name="assist_followup_empty">Type a follow-up first</string>
 
     <string name="assist_action_sheet_title">Actions</string>
     <string name="assist_action_navigate">Navigate</string>
     <string name="assist_action_calendar">Add to calendar</string>
     <string name="assist_action_dial">Call</string>
     <string name="assist_action_copy">Copy</string>
+    <string name="assist_action_none">No address, time, or phone number found.</string>
+    <string name="assist_action_incomplete">This action is missing information.</string>
+    <string name="assist_action_no_handler">No app on this device can open this action.</string>
 
     <string name="assist_voice_hold">Hold to talk</string>
     <string name="assist_voice_recording">Recording… release to transcribe</string>
     <string name="assist_voice_transcribing">Transcribing…</string>
+    <string name="assist_voice_hud_title">Voice input</string>
+    <string name="assist_voice_mic_required">Microphone permission is required for hold-to-talk</string>
+    <string name="assist_voice_failed">Voice transcription failed. Try again.</string>
+    <string name="assist_voice_no_speech">No speech was recognized. Try again.</string>
 
     <string name="assist_history_title">History</string>
     <string name="assist_history_empty">No history yet</string>
@@ -80,10 +117,54 @@
     <string name="assist_settings_privacy">Screen content is read only when you start a task. History stays on this device.</string>
     <string name="assist_settings_accessibility">Accessibility</string>
     <string name="assist_settings_overlay">Display over other apps</string>
+    <string name="assist_settings_microphone">Microphone (hold to talk)</string>
+    <string name="assist_settings_open_microphone">Allow microphone</string>
+    <string name="assist_settings_mic_denied">Microphone permission was not granted. Allow it from app settings.</string>
     <string name="assist_settings_model">Model connection</string>
     <string name="assist_notice_title">About the floating assistant</string>
     <string name="assist_notice_body">Screen content is read only when you start a task, and results stay on this device by default.</string>
     <string name="assist_notice_ok">Got it</string>
     <string name="assist_permission_overlay">Allow display over other apps</string>
     <string name="assist_permission_a11y">Turn on accessibility</string>
+
+    <string name="assist_menu_settings">Settings</string>
+    <string name="assist_settings_title">Quick assist settings</string>
+    <string name="assist_settings_overlay_section">Floating assistant</string>
+    <string name="assist_settings_open_overlay">Open overlay settings</string>
+    <string name="assist_settings_open_a11y">Open accessibility settings</string>
+    <string name="assist_settings_notifications">Notifications</string>
+    <string name="assist_settings_open_notifications">Notification settings</string>
+    <string name="assist_settings_base_url">API base URL</string>
+    <string name="assist_settings_base_url_hint">https://api.openai.com/v1</string>
+    <string name="assist_settings_model_name">Model name</string>
+    <string name="assist_settings_model_hint">For example, gpt-4o-mini</string>
+    <string name="assist_settings_api_key">API key</string>
+    <string name="assist_settings_api_key_hint">Leave blank to keep the saved key</string>
+    <string name="assist_settings_supports_vision">This model can read images</string>
+    <string name="assist_settings_save">Save model settings</string>
+    <string name="assist_settings_clear_key">Clear API key</string>
+    <string name="assist_settings_key_saved">An API key is saved in private app storage and is never shown again.</string>
+    <string name="assist_settings_key_missing">No API key is saved.</string>
+    <string name="assist_settings_key_cleared">API key cleared. Tasks stay disabled until a new key is saved.</string>
+    <string name="assist_settings_connected">Connected. Task entries are available.</string>
+    <string name="assist_settings_disconnected">Not connected. Enter a base URL, model name, and API key; task entries stay disabled.</string>
+    <string name="assist_settings_saved_connected">Saved. Connected. Task entries are available.</string>
+    <string name="assist_settings_saved_disconnected">Saved, but still not connected. Fill in the base URL, model name, and API key.</string>
+    <string name="assist_settings_invalid_url">The API base URL must start with http:// or https://</string>
+    <string name="assist_settings_save_failed">Could not save settings. Try again.</string>
+    <string name="assist_settings_load_failed">Could not read settings. Try again.</string>
+    <string name="assist_settings_overlay_required">Allow display over other apps before enabling the floating assistant.</string>
+    <string name="assist_settings_overlay_start_failed">Could not start the floating assistant. Check permissions and try again.</string>
+    <string name="assist_settings_overlay_running">Overlay allowed. The floating assistant is running.</string>
+    <string name="assist_settings_overlay_allowed">Overlay allowed. The floating assistant is not running.</string>
+    <string name="assist_settings_overlay_blocked">Display over other apps is not allowed.</string>
+    <string name="assist_settings_status_on">On</string>
+    <string name="assist_settings_status_off">Off</string>
+    <string name="assist_settings_settings_unavailable">The system settings screen is not available.</string>
+    <string name="assist_history_load_failed">Could not read local history.</string>
+    <string name="assist_history_delete_failed">Could not delete this history entry. Try again.</string>
+    <string name="assist_history_clear_failed">Could not clear history. Try again.</string>
+    <string name="assist_history_clear_confirm_title">Clear all history?</string>
+    <string name="assist_history_clear_confirm_message">All local history entries will be deleted permanently.</string>
+    <string name="assist_history_follow_up_title">%1$s · follow-up</string>
 </resources>
