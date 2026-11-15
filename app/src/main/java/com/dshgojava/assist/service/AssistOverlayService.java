@@ -316,13 +316,17 @@ public final class AssistOverlayService extends Service {
             return false;
         }
         ball = next;
-        cardLayer = createCardLayer(windows, windowType);
+        cardLayer = createCardLayer();
         voiceHud = new AssistVoiceHud(overlayContext, windows, windowType, this::safeArea);
         return true;
     }
 
-    private AssistCardLayer createCardLayer(WindowManager windows, int windowType) {
-        return new AssistCardLayer(overlayContext, windows, windowType,
+    private AssistCardLayer createCardLayer() {
+        Context app = getApplicationContext();
+        WindowManager appWindows = app.getSystemService(WindowManager.class);
+        if (appWindows == null) appWindows = getSystemService(WindowManager.class);
+        return new AssistCardLayer(app, appWindows,
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
                 this::safeArea, this::ballSide, model, this::recordHistory);
     }
 
@@ -438,9 +442,7 @@ public final class AssistOverlayService extends Service {
             AssistCardLayer previous = cardLayer;
             cardLayer = null;
             previous.dismissNow();
-            WindowManager windows = overlayContext == null
-                    ? null : overlayContext.getSystemService(WindowManager.class);
-            if (windows != null) cardLayer = createCardLayer(windows, activeChannel.windowType());
+            cardLayer = createCardLayer();
         }
     }
 

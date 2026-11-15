@@ -6,29 +6,28 @@ import org.junit.jupiter.api.Test;
 
 class CardImeTest {
     @Test
-    void ignoresTransientZeroWhileImeIsMarkedVisible() {
+    void recoversStableFullKeyboardHeightFromOverlap() {
         CardIme ime = new CardIme();
 
-        assertEquals(720, ime.resolve(720, true));
-        assertEquals(720, ime.resolve(0, true));
-        assertEquals(720, ime.cachedBottom());
+        assertEquals(1059, ime.resolve(532, true, 2772, 526, 1719));
+        assertEquals(1059, ime.resolve(322, true, 2772, 316, 1719));
+        assertEquals(1059, ime.cachedKeyboard());
+    }
+
+    @Test
+    void ignoresTransientZeroWhileImeIsMarkedVisible() {
+        CardIme ime = new CardIme();
+        ime.resolve(532, true, 2772, 526, 1719);
+
+        assertEquals(1059, ime.resolve(0, true, 2772, 204, 1304));
     }
 
     @Test
     void hiddenImeResetsTheCache() {
         CardIme ime = new CardIme();
-        ime.resolve(720, true);
+        ime.resolve(532, true, 2772, 526, 1719);
 
-        assertEquals(0, ime.resolve(0, false));
-        assertEquals(0, ime.resolve(0, true));
-    }
-
-    @Test
-    void newNonZeroInsetReplacesTheCache() {
-        CardIme ime = new CardIme();
-        ime.resolve(400, true);
-
-        assertEquals(900, ime.resolve(900, true));
-        assertEquals(900, ime.resolve(0, true));
+        assertEquals(0, ime.resolve(0, false, 2772, 526, 1719));
+        assertEquals(0, ime.resolve(0, true, 2772, 526, 1719));
     }
 }

@@ -86,6 +86,7 @@ public final class AssistCardView extends FrameLayout {
 
     private QuickTask task;
     private AssistResult lastResult = AssistResult.idle();
+    private String lastDisplayText = "";
     private boolean retryAvailable;
     private Pending pending;
     private boolean scheduled;
@@ -272,16 +273,17 @@ public final class AssistCardView extends FrameLayout {
         this.task = task;
         title.setText(task == null ? getContext().getString(R.string.assist_menu_title)
                 : task.title());
-        render(lastResult, retryAvailable);
+        render(lastResult, lastDisplayText, retryAvailable);
     }
 
-    public void render(AssistResult result, boolean retryAvailable) {
+    public void render(AssistResult result, String displayText, boolean retryAvailable) {
         AssistResult snapshot = result == null ? AssistResult.idle() : result;
+        String text = displayText == null ? "" : displayText;
         if (Looper.myLooper() != Looper.getMainLooper()) {
-            main.post(() -> enqueue(snapshot, retryAvailable));
+            main.post(() -> enqueue(snapshot, text, retryAvailable));
             return;
         }
-        enqueue(snapshot, retryAvailable);
+        enqueue(snapshot, text, retryAvailable);
     }
 
     public boolean askOpen() {
@@ -324,8 +326,8 @@ public final class AssistCardView extends FrameLayout {
         return super.dispatchKeyEvent(event);
     }
 
-    private void enqueue(AssistResult result, boolean retryable) {
-        pending = new Pending(result, retryable);
+    private void enqueue(AssistResult result, String displayText, boolean retryable) {
+        pending = new Pending(result, displayText, retryable);
         if (result.terminal()) {
             main.removeCallbacks(flush);
             scheduled = false;
@@ -355,8 +357,9 @@ public final class AssistCardView extends FrameLayout {
 
     private void apply(Pending next) {
         lastResult = next.result();
+        lastDisplayText = next.displayText();
         retryAvailable = next.retryAvailable();
-        CardUiState.State state = CardUiState.from(lastResult, retryAvailable);
+        CardUiState.State state = CardUiState.from(lastResult, lastDisplayText, retryAvailable);
 
         skeleton.setVisibility(state.skeleton() ? VISIBLE : GONE);
         answerScroll.setVisibility(state.textVisible() || lastResult.error() != null
@@ -587,5 +590,5 @@ public final class AssistCardView extends FrameLayout {
         return mode == Configuration.UI_MODE_NIGHT_YES;
     }
 
-    private record Pending(AssistResult result, boolean retryAvailable) { }
+    private record Pending(AssistResult result, String displayText, boolean retryAvailable) { }
 }

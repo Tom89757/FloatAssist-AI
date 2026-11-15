@@ -65,13 +65,14 @@ public final class AssistCardLayer implements AssistCardView.Listener,
     private AssistResult current = AssistResult.idle();
     private CardPlacement.Placement placement;
     private ValueAnimator slide;
-    private ValueAnimator imeLift;
     private boolean followUpStarted;
     private boolean asking;
     private boolean dismissing;
     private boolean captureHidden;
     private boolean initialRecorded;
     private int baseY;
+    private String transcript = "";
+    private String pendingQuestion = "";
 
     public AssistCardLayer(Context context, WindowManager windows, int windowType,
                            Supplier<BallGeometry.SafeArea> safeArea,
@@ -125,6 +126,8 @@ public final class AssistCardLayer implements AssistCardView.Listener,
         this.asking = false;
         this.dismissing = false;
         this.initialRecorded = false;
+        this.transcript = "";
+        this.pendingQuestion = "";
 
         AssistCardView next = new AssistCardView(context, this);
         next.bindTask(task);
@@ -146,7 +149,7 @@ public final class AssistCardLayer implements AssistCardView.Listener,
         }
         card = next;
         card.setVisibility(captureHidden ? View.INVISIBLE : View.VISIBLE);
-        card.render(current, canRetry());
+        card.render(current, displayText(), canRetry());
         unsubscribe = run.state().subscribe(state -> {
             if (Looper.myLooper() == Looper.getMainLooper()) {
                 onRunState(state);
@@ -169,7 +172,7 @@ public final class AssistCardLayer implements AssistCardView.Listener,
         params.y = placement.y();
         int bottom = safeArea().screenH() - safeArea().bottom() - dp(GAP_DP);
         params.y = CardPlacement.liftedY(baseY, params.height,
-                safeArea().top() + dp(GAP_DP), bottom, ime.cachedBottom());
+                safeArea().top() + dp(GAP_DP), bottom, ime.cachedKeyboard());
         try {
             windows.updateViewLayout(card, params);
         } catch (RuntimeException error) {
@@ -246,14 +249,17 @@ public final class AssistCardLayer implements AssistCardView.Listener,
     public void onAsk(String question) {
         if (card == null || followUp == null || task == null
                 || current.stage() != Stage.DONE || followUp.busy()) return;
+        String clean = question == null ? "" : question.strip();
+        pendingQuestion = clean;
         AssistResult state;
         if (followUpStarted) {
-            state = followUp.continueFollowUp(question);
+            state = followUp.continueFollowUp(clean);
         } else {
-            state = followUp.begin(task.title(), current.text(), question);
+            state = followUp.begin(task.title(), current.text(), clean);
             followUpStarted = true;
         }
         if (state.stage() == Stage.FAILED) {
+            pendingQuestion = "";
             current = state;
             render();
         }
@@ -289,8 +295,7 @@ public final class AssistCardLayer implements AssistCardView.Listener,
         if (card == null || params == null || dismissing) return;
         asking = true;
         params.flags &= ~WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
-        params.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE
-                | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING;
+        params.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING;
         updateWindow();
     }
 
@@ -299,10 +304,6 @@ public final class AssistCardLayer implements AssistCardView.Listener,
         if (card == null || params == null || dismissing) return;
         asking = false;
         ime.reset();
-        if (imeLift != null) {
-            imeLift.cancel();
-            imeLift = null;
-        }
         params.flags |= WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
         params.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING;
         if (placement != null) params.height = placement.height();
@@ -316,52 +317,24 @@ public final class AssistCardLayer implements AssistCardView.Listener,
     @Override
     public void onIme(int bottomInset, boolean visible) {
         if (card == null || params == null || !asking || dismissing) return;
-        int bottom = ime.resolve(bottomInset, visible);
         BallGeometry.SafeArea area = safeArea();
+        int keyboard = ime.resolve(bottomInset, visible,
+                area.screenH(), params.y, params.height);
+        if (keyboard <= 0) return;
         int gap = dp(GAP_DP);
         int minY = area.top() + gap;
         int maxBottom = area.screenH() - area.bottom() - gap;
         int baseHeight = placement == null ? params.height : placement.height();
-        int available = Math.max(1, maxBottom - minY - bottom);
+        int available = Math.max(1, maxBottom - minY - keyboard);
         int targetHeight = Math.max(1, Math.min(baseHeight, available));
-        int targetY = CardPlacement.liftedY(baseY, targetHeight, minY, maxBottom, bottom);
-        animateLift(targetY, targetHeight);
-    }
-
-    /** Smoothly follows the IME inset so the keyboard never causes a hard resize jump. */
-    private void animateLift(int targetY, int targetHeight) {
-        if (params == null) return;
+        int targetY = CardPlacement.liftedY(baseY, targetHeight, minY, maxBottom, keyboard);
+        android.util.Log.d("DshAssist",
+                "ime keyboard=" + keyboard + " y=" + params.y + "->" + targetY
+                        + " h=" + params.height + "->" + targetHeight);
         if (params.y == targetY && params.height == targetHeight) return;
-        if (imeLift != null) imeLift.cancel();
-        int fromY = params.y;
-        int fromHeight = params.height;
-        if (!OverlayMotion.on() || (fromY == targetY && fromHeight == targetHeight)) {
-            params.y = targetY;
-            params.height = targetHeight;
-            updateWindow();
-            return;
-        }
-        ValueAnimator animator = ValueAnimator.ofFloat(0f, 1f);
-        animator.setDuration(150L);
-        animator.setInterpolator(OverlayMotion.GLIDE);
-        animator.addUpdateListener(animation -> {
-            if (card == null || params == null) return;
-            float t = animation.getAnimatedFraction();
-            params.y = Math.round(fromY + (targetY - fromY) * t);
-            params.height = Math.round(fromHeight + (targetHeight - fromHeight) * t);
-            updateWindow();
-        });
-        animator.addListener(new android.animation.AnimatorListenerAdapter() {
-            @Override public void onAnimationEnd(android.animation.Animator animation) {
-                imeLift = null;
-            }
-
-            @Override public void onAnimationCancel(android.animation.Animator animation) {
-                imeLift = null;
-            }
-        });
-        imeLift = animator;
-        animator.start();
+        params.height = targetHeight;
+        params.y = targetY;
+        updateWindow();
     }
 
     @Override
@@ -376,9 +349,12 @@ public final class AssistCardLayer implements AssistCardView.Listener,
     private void onRunState(AssistResult state) {
         if (card == null || dismissing || followUpStarted) return;
         current = state;
-        if (!initialRecorded && state.stage() == Stage.DONE) {
-            initialRecorded = true;
-            record(state.text(), false);
+        if (state.stage() == Stage.DONE) {
+            transcript = state.text();
+            if (!initialRecorded) {
+                initialRecorded = true;
+                record(state.text(), false);
+            }
         }
         render();
     }
@@ -389,6 +365,8 @@ public final class AssistCardLayer implements AssistCardView.Listener,
         if (state.terminal()) {
             card.closeAsk(false);
             if (state.stage() == Stage.DONE) {
+                transcript = join(transcript, "【追问】" + pendingQuestion, state.text());
+                pendingQuestion = "";
                 record(state.text(), true);
             }
         }
@@ -401,7 +379,27 @@ public final class AssistCardLayer implements AssistCardView.Listener,
     }
 
     private void render() {
-        if (card != null) card.render(current, canRetry());
+        if (card != null) card.render(current, displayText(), canRetry());
+    }
+
+    private String displayText() {
+        if (followUpStarted) {
+            String live = current == null ? "" : current.text();
+            return pendingQuestion.isEmpty()
+                    ? transcript
+                    : join(transcript, "【追问】" + pendingQuestion, live);
+        }
+        return current == null ? "" : current.text();
+    }
+
+    private static String join(String... parts) {
+        StringBuilder out = new StringBuilder();
+        for (String part : parts) {
+            if (part == null || part.isBlank()) continue;
+            if (out.length() > 0) out.append("\n\n");
+            out.append(part.strip());
+        }
+        return out.toString();
     }
 
     private boolean canRetry() {
@@ -501,10 +499,6 @@ public final class AssistCardLayer implements AssistCardView.Listener,
         asking = false;
         dismissing = false;
         ime.reset();
-        if (imeLift != null) {
-            imeLift.cancel();
-            imeLift = null;
-        }
         if (unsubscribe != null) {
             unsubscribe.run();
             unsubscribe = null;
@@ -522,6 +516,8 @@ public final class AssistCardLayer implements AssistCardView.Listener,
         current = AssistResult.idle();
         followUpStarted = false;
         initialRecorded = false;
+        transcript = "";
+        pendingQuestion = "";
         task = null;
         initialRetry = null;
     }

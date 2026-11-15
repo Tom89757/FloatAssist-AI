@@ -27,9 +27,9 @@ public final class CardUiState {
 
     private CardUiState() { }
 
-    public static State from(AssistResult result, boolean retryAvailable) {
+    public static State from(AssistResult result, String displayText, boolean retryAvailable) {
         Stage stage = result.stage();
-        String text = result.text();
+        String text = displayText == null ? "" : displayText;
         boolean hasText = !text.isBlank();
         boolean terminal = result.terminal();
         Status status;

@@ -1,28 +1,33 @@
 package com.dshgojava.assist.ui;
 
 /**
- * Caches the last non-zero IME bottom inset. Android can report a visible IME
- * with a transient zero height while the window is being re-laid out.
+ * Recovers the stable full keyboard height. For a non-fullscreen, movable
+ * overlay the IME bottom inset is the overlap between the window and the
+ * keyboard, so it changes as the window moves. Reconstructing the full height
+ * from the overlap and the window position avoids that feedback loop.
  */
 public final class CardIme {
-    private int cachedBottom;
+    private int cachedKeyboard;
 
-    public int resolve(int reportedBottom, boolean visible) {
+    /** Returns the full keyboard height in pixels; 0 while the IME is hidden. */
+    public int resolve(int reportedBottom, boolean visible,
+                       int screenH, int cardY, int cardHeight) {
         if (!visible) {
-            cachedBottom = 0;
+            cachedKeyboard = 0;
             return 0;
         }
         if (reportedBottom > 0) {
-            cachedBottom = reportedBottom;
+            int full = reportedBottom + screenH - cardY - cardHeight;
+            if (full > cachedKeyboard) cachedKeyboard = full;
         }
-        return cachedBottom;
+        return cachedKeyboard;
     }
 
-    public int cachedBottom() {
-        return cachedBottom;
+    public int cachedKeyboard() {
+        return cachedKeyboard;
     }
 
     public void reset() {
-        cachedBottom = 0;
+        cachedKeyboard = 0;
     }
 }
