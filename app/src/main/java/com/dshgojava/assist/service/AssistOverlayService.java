@@ -60,6 +60,7 @@ import com.dshgojava.assist.ui.AssistVoiceHud;
 import com.dshgojava.assist.voice.VoiceCapture;
 import com.dshgojava.assist.voice.VoicePolicy;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -461,7 +462,9 @@ public final class AssistOverlayService extends Service {
     private final AssistBall.Listener ballListener = new AssistBall.Listener() {
         @Override
         public void onTaskSelected(QuickTask task) {
-            if (task.source() == SourceKind.CLIP || TaskRegistry.isClipboardWeb(task)) {
+            if (TaskRegistry.IMAGE_PICK.equals(task.id())) {
+                AssistCaptureActivity.pickImage(AssistOverlayService.this, task);
+            } else if (task.source() == SourceKind.CLIP || TaskRegistry.isClipboardWeb(task)) {
                 AssistCaptureActivity.readClipboard(AssistOverlayService.this, task);
             } else if (task.source() == SourceKind.IMAGE && !imageSource.available()) {
                 AssistCaptureActivity.pickImage(AssistOverlayService.this, task);
@@ -538,9 +541,9 @@ public final class AssistOverlayService extends Service {
     }
 
     private void acceptImage(Intent intent) {
-        QuickTask task = taskFrom(intent, SourceKind.IMAGE);
-        Uri uri = imageUri(intent);
-        if (task == null || uri == null) {
+        QuickTask task = imageTaskFrom(intent);
+        List<Uri> uris = imageUris(intent);
+        if (task == null || uris.isEmpty()) {
             toast(R.string.assist_image_pick_failed);
             return;
         }
@@ -548,18 +551,35 @@ public final class AssistOverlayService extends Service {
             toast(R.string.assist_capture_unavailable);
             return;
         }
-        imageSource.select(uri);
+        imageSource.select(uris);
+        if (TaskRegistry.IMAGE_PICK.equals(task.id())) {
+            toast(getString(R.string.assist_image_selected, imageSource.selectedCount()));
+            return;
+        }
         startTask(task, AssistRequest.of(task));
     }
 
-    @SuppressWarnings("deprecation")
-    private static Uri imageUri(Intent intent) {
+    /** Image bridge tasks: the two model tasks plus the menu-only picker row. */
+    private static QuickTask imageTaskFrom(Intent intent) {
         if (intent == null) return null;
-        if (Build.VERSION.SDK_INT >= 33) {
-            return intent.getParcelableExtra(
-                    AssistCaptureActivity.EXTRA_IMAGE_URI, Uri.class);
-        }
-        return intent.getParcelableExtra(AssistCaptureActivity.EXTRA_IMAGE_URI);
+        String id = intent.getStringExtra(AssistCaptureActivity.EXTRA_TASK_ID);
+        if (id == null || id.isBlank()) return null;
+        if (TaskRegistry.IMAGE_PICK.equals(id)) return TaskRegistry.imagePicker();
+        QuickTask task = TaskRegistry.find(id).orElse(null);
+        return task != null && task.source() == SourceKind.IMAGE ? task : null;
+    }
+
+    @SuppressWarnings("deprecation")
+    private static List<Uri> imageUris(Intent intent) {
+        if (intent == null) return List.of();
+        List<Uri> uris = Build.VERSION.SDK_INT >= 33
+                ? intent.getParcelableArrayListExtra(AssistCaptureActivity.EXTRA_IMAGE_URIS, Uri.class)
+                : intent.getParcelableArrayListExtra(AssistCaptureActivity.EXTRA_IMAGE_URIS);
+        if (uris != null && !uris.isEmpty()) return List.copyOf(uris);
+        Uri single = Build.VERSION.SDK_INT >= 33
+                ? intent.getParcelableExtra(AssistCaptureActivity.EXTRA_IMAGE_URI, Uri.class)
+                : intent.getParcelableExtra(AssistCaptureActivity.EXTRA_IMAGE_URI);
+        return single == null ? List.of() : List.of(single);
     }
 
     /** Clipboard bridge tasks: the text group plus the clipboard-URL web task. */
@@ -573,7 +593,8 @@ public final class AssistOverlayService extends Service {
         return bridged ? task : null;
     }
 
-    private static QuickTask taskFrom(Intent intent, SourceKind source) {        if (intent == null) return null;
+    private static QuickTask taskFrom(Intent intent, SourceKind source) {
+        if (intent == null) return null;
         String id = intent.getStringExtra(AssistCaptureActivity.EXTRA_TASK_ID);
         if (id == null || id.isBlank()) return null;
         QuickTask task = TaskRegistry.find(id).orElse(null);
@@ -885,6 +906,10 @@ public final class AssistOverlayService extends Service {
     }
 
     private void toast(int text) {
+        Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
+    }
+
+    private void toast(CharSequence text) {
         Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
     }
 }

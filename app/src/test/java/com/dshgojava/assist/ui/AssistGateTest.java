@@ -72,6 +72,16 @@ class AssistGateTest {
     }
 
     @Test
+    void imagePickerRowStaysAvailableWithoutSelection() {
+        AssistGate.Capabilities noImage = caps(true, true, true, true, false);
+
+        assertEquals(AssistMenuModel.Block.NONE,
+                AssistGate.blockFor(TaskRegistry.imagePicker(), noImage));
+        assertEquals(AssistMenuModel.Block.SOURCE,
+                AssistGate.blockFor(TaskRegistry.require("image.ocr"), noImage));
+    }
+
+    @Test
     void modelAndVisionAreReportedBeforeAnImageIsSelected() {
         assertEquals(AssistMenuModel.Block.MODEL, AssistGate.blockFor(
                 TaskRegistry.require("image.ocr"), caps(true, false, false, true, false)));

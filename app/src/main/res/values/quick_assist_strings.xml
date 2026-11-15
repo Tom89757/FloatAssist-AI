@@ -53,6 +53,7 @@
     <string name="assist_image_not_supported">The shared item is not an image</string>
     <string name="assist_image_first_only">Only the first image will be processed</string>
     <string name="assist_image_share_choose">Choose an image task</string>
+    <string name="assist_image_selected">Selected %1$d image(s)</string>
     <string name="assist_task_pending">Task execution will be enabled when the result card is connected.</string>
     <string name="assist_voice_pending">Hold-to-talk is not available yet.</string>
     <string name="assist_overlay_attach_failed">Could not show the floating assistant. Check display-over-other-apps permission.</string>

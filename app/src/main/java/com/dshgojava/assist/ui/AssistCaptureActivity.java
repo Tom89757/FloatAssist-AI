@@ -14,11 +14,14 @@ import com.dshgojava.assist.R;
 import com.dshgojava.assist.SourceKind;
 import com.dshgojava.assist.TaskRegistry;
 import com.dshgojava.assist.service.AssistOverlayService;
+import com.dshgojava.assist.source.ImageSource;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
@@ -37,6 +40,8 @@ public final class AssistCaptureActivity extends Activity {
     public static final String EXTRA_TASK_ID = "task_id";
     public static final String EXTRA_CLIP_TEXT = "clip_text";
     public static final String EXTRA_IMAGE_URI = "image_uri";
+    /** Multiple picked images, newest selection replacing the previous one. */
+    public static final String EXTRA_IMAGE_URIS = "image_uris";
 
     private static final String EXTRA_MODE = "mode";
     private static final String MODE_CLIP = "clip";
@@ -65,8 +70,23 @@ public final class AssistCaptureActivity extends Activity {
                 .putExtra(EXTRA_MODE, mode)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         try {
-            context.startActivity(intent);
-        } catch (RuntimeException error) {
+            if (android.os.Build.VERSION.SDK_INT >= 34) {
+                // Android 14+ 后台启动 Activity 需要显式声明：用 PendingIntent 发送并允许后台启动。
+                android.app.ActivityOptions options = android.app.ActivityOptions.makeBasic()
+                        .setPendingIntentBackgroundActivityStartMode(
+                                android.app.ActivityOptions
+                                        .MODE_BACKGROUND_ACTIVITY_START_ALLOWED);
+                android.app.PendingIntent pending = android.app.PendingIntent.getActivity(
+                        context,
+                        (task.id() + ":" + mode).hashCode(),
+                        intent,
+                        android.app.PendingIntent.FLAG_UPDATE_CURRENT
+                                | android.app.PendingIntent.FLAG_IMMUTABLE);
+                pending.send(context, 0, null, null, null, null, options.toBundle());
+            } else {
+                context.startActivity(intent);
+            }
+        } catch (android.app.PendingIntent.CanceledException | RuntimeException error) {
             Toast.makeText(context, R.string.assist_capture_unavailable,
                     Toast.LENGTH_SHORT).show();
         }
@@ -86,7 +106,9 @@ public final class AssistCaptureActivity extends Activity {
 
         taskId = intent == null ? null : intent.getStringExtra(EXTRA_TASK_ID);
         String mode = intent == null ? null : intent.getStringExtra(EXTRA_MODE);
-        QuickTask task = taskId == null ? null : TaskRegistry.find(taskId).orElse(null);
+        QuickTask task = TaskRegistry.IMAGE_PICK.equals(taskId)
+                ? TaskRegistry.imagePicker()
+                : (taskId == null ? null : TaskRegistry.find(taskId).orElse(null));
         if (task == null || !modeMatches(task, mode)) {
             fail(R.string.assist_capture_unavailable);
             return;
@@ -130,7 +152,9 @@ public final class AssistCaptureActivity extends Activity {
     }
 
     private static boolean modeMatches(QuickTask task, String mode) {
-        if (MODE_CLIP.equals(mode)) return task.source() == SourceKind.CLIP;
+        if (MODE_CLIP.equals(mode)) {
+            return task.source() == SourceKind.CLIP || TaskRegistry.isClipboardWeb(task);
+        }
         if (MODE_IMAGE.equals(mode)) return task.source() == SourceKind.IMAGE;
         return false;
     }
@@ -195,6 +219,7 @@ public final class AssistCaptureActivity extends Activity {
         Intent picker = new Intent(Intent.ACTION_OPEN_DOCUMENT)
                 .addCategory(Intent.CATEGORY_OPENABLE)
                 .setType("image/*")
+                .putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
                 .addFlags(READ_FLAGS);
         try {
             startActivityForResult(picker, REQUEST_IMAGE);
@@ -214,17 +239,33 @@ public final class AssistCaptureActivity extends Activity {
             finishNow();
             return;
         }
-        Uri uri = data.getData();
-        if (uri == null) {
+        List<Uri> uris = pickedUris(data);
+        if (uris.isEmpty()) {
             fail(R.string.assist_image_pick_failed);
             return;
         }
-        QuickTask task = taskId == null ? null : TaskRegistry.find(taskId).orElse(null);
+        QuickTask task = TaskRegistry.IMAGE_PICK.equals(taskId)
+                ? TaskRegistry.imagePicker()
+                : (taskId == null ? null : TaskRegistry.find(taskId).orElse(null));
         if (task == null || task.source() != SourceKind.IMAGE) {
             fail(R.string.assist_capture_unavailable);
             return;
         }
-        copyImageAsync(uri, task);
+        copyImagesAsync(uris, task);
+    }
+
+    /** Reads every picked image; older pickers only fill {@code data}. */
+    private static List<Uri> pickedUris(Intent data) {
+        List<Uri> uris = new ArrayList<>();
+        ClipData clip = data.getClipData();
+        if (clip != null) {
+            for (int i = 0; i < clip.getItemCount(); i++) {
+                Uri uri = clip.getItemAt(i) == null ? null : clip.getItemAt(i).getUri();
+                if (uri != null) uris.add(uri);
+            }
+        }
+        if (uris.isEmpty() && data.getData() != null) uris.add(data.getData());
+        return uris;
     }
 
     private void handleSharedImage(Intent intent) {
@@ -249,7 +290,7 @@ public final class AssistCaptureActivity extends Activity {
                 .setItems(tasks, (ignored, which) -> {
                     QuickTask task = TaskRegistry.require(which == 0
                             ? "image.ocr" : "image.explain");
-                    copyImageAsync(uri, task);
+                    copyImagesAsync(List.of(uri), task);
                 })
                 .setOnCancelListener(ignored -> finishNow())
                 .create();
@@ -289,53 +330,69 @@ public final class AssistCaptureActivity extends Activity {
         return type == null || type.startsWith("image/");
     }
 
-    private void copyImageAsync(Uri source, QuickTask task) {
+    private void copyImagesAsync(List<Uri> sources, QuickTask task) {
         try {
             io.execute(() -> {
-                File target = null;
+                List<Uri> copied = new ArrayList<>(Math.min(sources.size(), ImageSource.MAX_IMAGES));
                 int error = 0;
-                try {
-                    File directory = new File(getCacheDir(), "assist-capture");
-                    if (!directory.isDirectory() && !directory.mkdirs()) {
-                        throw new IOException("cannot create capture cache");
-                    }
-                    target = new File(directory, "image-" + System.nanoTime() + ".img");
-                    try (InputStream input = getContentResolver().openInputStream(source);
-                         OutputStream output = new FileOutputStream(target)) {
-                        if (input == null) throw new IOException("image stream unavailable");
-                        byte[] buffer = new byte[16 * 1024];
-                        int total = 0;
-                        int read;
-                        while ((read = input.read(buffer)) >= 0) {
-                            total += read;
-                            if (total > MAX_IMAGE_BYTES) {
-                                error = R.string.assist_image_too_large;
-                                break;
-                            }
-                            output.write(buffer, 0, read);
+                for (Uri source : sources) {
+                    File target = null;
+                    try {
+                        File directory = new File(getCacheDir(), "assist-capture");
+                        if (!directory.isDirectory() && !directory.mkdirs()) {
+                            throw new IOException("cannot create capture cache");
                         }
-                        if (error == 0 && total == 0) error = R.string.assist_image_pick_failed;
+                        target = new File(directory, "image-" + System.nanoTime() + ".img");
+                        try (InputStream input = getContentResolver().openInputStream(source);
+                             OutputStream output = new FileOutputStream(target)) {
+                            if (input == null) throw new IOException("image stream unavailable");
+                            byte[] buffer = new byte[16 * 1024];
+                            int total = 0;
+                            int read;
+                            while ((read = input.read(buffer)) >= 0) {
+                                total += read;
+                                if (total > MAX_IMAGE_BYTES) {
+                                    error = R.string.assist_image_too_large;
+                                    break;
+                                }
+                                output.write(buffer, 0, read);
+                            }
+                            if (error == 0 && total == 0) error = R.string.assist_image_pick_failed;
+                        }
+                    } catch (SecurityException | IOException failure) {
+                        error = R.string.assist_image_pick_failed;
                     }
-                } catch (SecurityException | IOException failure) {
-                    error = R.string.assist_image_pick_failed;
+                    if (error != 0) {
+                        if (target != null) target.delete();
+                        break;
+                    }
+                    copied.add(Uri.fromFile(target));
+                    if (copied.size() >= ImageSource.MAX_IMAGES) break;
                 }
-                File copied = target;
+                List<Uri> files = List.copyOf(copied);
                 int failure = error;
                 runOnUiThread(() -> {
                     if (finished || isFinishing() || isDestroyed()) {
-                        if (copied != null) copied.delete();
+                        deleteFiles(files);
                         return;
                     }
-                    if (failure != 0 || copied == null) {
-                        if (copied != null) copied.delete();
+                    if (failure != 0 || files.isEmpty()) {
+                        deleteFiles(files);
                         fail(failure == 0 ? R.string.assist_image_pick_failed : failure);
                         return;
                     }
-                    deliver(ACTION_IMAGE_SELECTED, task, EXTRA_IMAGE_URI, Uri.fromFile(copied));
+                    deliver(ACTION_IMAGE_SELECTED, task, EXTRA_IMAGE_URIS, files);
                 });
             });
         } catch (RejectedExecutionException failure) {
             fail(R.string.assist_capture_unavailable);
+        }
+    }
+
+    private static void deleteFiles(List<Uri> files) {
+        for (Uri file : files) {
+            String path = file.getPath();
+            if (path != null) new File(path).delete();
         }
     }
 
@@ -350,6 +407,12 @@ public final class AssistCaptureActivity extends Activity {
             if ("content".equals(uri.getScheme())) {
                 forward.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             }
+        } else if (value instanceof List<?> list) {
+            ArrayList<Uri> uris = new ArrayList<>(list.size());
+            for (Object item : list) {
+                if (item instanceof Uri uri) uris.add(uri);
+            }
+            forward.putParcelableArrayListExtra(extra, uris);
         } else {
             forward.putExtra(extra, String.valueOf(value));
         }

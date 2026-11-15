@@ -51,10 +51,12 @@ class AssistMenuModelTest {
         assertEquals(5, screen.tasks().size());
         assertTrue(screen.tasks().stream()
                 .anyMatch(row -> row.task().id().equals("screen.actions")));
-        assertEquals(TaskRegistry.all().stream()
-                        .filter(task -> task.source() != SourceKind.VOICE)
-                        .map(QuickTask::id)
-                        .collect(java.util.stream.Collectors.toSet()),
+        Set<String> expected = new HashSet<>(TaskRegistry.all().stream()
+                .filter(task -> task.source() != SourceKind.VOICE)
+                .map(QuickTask::id)
+                .toList());
+        expected.add(TaskRegistry.IMAGE_PICK);
+        assertEquals(expected,
                 model.groups(AssistMenuModel.TaskGate.allowAll()).stream()
                         .flatMap(row -> row.tasks().stream())
                         .map(row -> row.task().id())

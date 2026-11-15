@@ -53,6 +53,7 @@
     <string name="assist_image_not_supported">分享的内容不是图片</string>
     <string name="assist_image_first_only">一次只处理第一张图片</string>
     <string name="assist_image_share_choose">选择图片任务</string>
+    <string name="assist_image_selected">已选择 %1$d 张图片</string>
     <string name="assist_task_pending">结果卡片接入后即可执行任务。</string>
     <string name="assist_voice_pending">按住说话尚未开放。</string>
     <string name="assist_overlay_attach_failed">无法显示悬浮助手，请检查“显示在其他应用上层”权限。</string>

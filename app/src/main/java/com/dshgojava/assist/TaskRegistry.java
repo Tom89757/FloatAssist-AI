@@ -12,6 +12,8 @@ import java.util.Optional;
 public final class TaskRegistry {
     /** Reads a URL from the clipboard and downloads the page; no accessibility needed. */
     public static final String WEB_CLIP = "web.clip";
+    /** Menu-only row that reopens the image picker; never sent to the model. */
+    public static final String IMAGE_PICK = "image.pick";
 
     private static final List<QuickTask> P0 = List.of(
             new QuickTask(
@@ -164,6 +166,17 @@ public final class TaskRegistry {
     /** True for the clipboard-URL task, which must not require accessibility. */
     public static boolean isClipboardWeb(QuickTask task) {
         return task != null && WEB_CLIP.equals(task.id());
+    }
+
+    /** Menu-only picker row; not part of {@link #all()} so it never reaches the model. */
+    public static QuickTask imagePicker() {
+        return new QuickTask(
+                IMAGE_PICK,
+                "重新选择图片",
+                SourceKind.IMAGE,
+                OutputKind.TEXT_CARD,
+                "{{text}}",
+                false);
     }
 
     public static String fillPrompt(QuickTask task, CaptureBundle bundle) {

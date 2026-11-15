@@ -32,6 +32,8 @@ import java.util.concurrent.RejectedExecutionException;
  */
 public final class WebSource implements AssistSource {
     private static final long TREE_BUDGET_MS = 1_500L;
+    /** 直接抓取正文低于此长度时视为失败（多为登录墙、JS 空壳），改读无障碍树。 */
+    private static final int MIN_FETCHED_CHARS = 200;
 
     // 已知浏览器 / 内置 WebView 容器；白名单不命中时还会靠地址栏特征动态判定。
     private static final Set<String> BROWSERS = Set.of(
@@ -129,6 +131,11 @@ public final class WebSource implements AssistSource {
 
             String body = capture == null
                     ? "" : ScreenTextExtractor.extract(capture.windows()).text();
+            // 已知地址时优先按网址直接下载正文；抓取失败或正文过短再回退到无障碍树。
+            if (url != null) {
+                String fetched = fetchBody(url);
+                if (fetched.length() >= MIN_FETCHED_CHARS || body.isBlank()) body = fetched;
+            }
             if (body.isBlank()) throw new CaptureException("网页正文无法读取");
 
             // web.ask 场景：把用户问题合并进正文，prompt 模板只需 {{text}}。
@@ -144,6 +151,15 @@ public final class WebSource implements AssistSource {
             return new CaptureBundle(text, List.of(), meta);
         } finally {
             if (capture != null) capture.close();
+        }
+    }
+
+    /** 按网址直接下载正文；任何失败都返回空串，由调用方回退到无障碍树。 */
+    private static String fetchBody(String url) {
+        try {
+            return HtmlText.toText(WebClip.fetch(url), ScreenTextExtractor.DEFAULT_MAX_CHARS);
+        } catch (RuntimeException error) {
+            return "";
         }
     }
 

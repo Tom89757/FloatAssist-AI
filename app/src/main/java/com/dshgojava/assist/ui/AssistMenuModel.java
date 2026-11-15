@@ -91,7 +91,9 @@ public final class AssistMenuModel {
     }
 
     public static AssistMenuModel all() {
-        return new AssistMenuModel(TaskRegistry.all());
+        List<QuickTask> tasks = new ArrayList<>(TaskRegistry.all());
+        tasks.add(TaskRegistry.imagePicker());
+        return new AssistMenuModel(tasks);
     }
 
     public List<GroupRow> groups(TaskGate gate) {

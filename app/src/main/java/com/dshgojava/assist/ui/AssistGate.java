@@ -46,7 +46,8 @@ public final class AssistGate {
         if (task.source() == SourceKind.CLIP && !capabilities.clipboardAvailable()) {
             return AssistMenuModel.Block.SOURCE;
         }
-        if (task.source() == SourceKind.IMAGE && !capabilities.imageSelected()) {
+        if (task.source() == SourceKind.IMAGE && !capabilities.imageSelected()
+                && !TaskRegistry.IMAGE_PICK.equals(task.id())) {
             return AssistMenuModel.Block.SOURCE;
         }
         if (task.source() == SourceKind.VOICE && !capabilities.voiceAvailable()) {
