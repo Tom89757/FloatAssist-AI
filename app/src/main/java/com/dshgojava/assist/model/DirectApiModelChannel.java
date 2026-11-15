@@ -113,8 +113,18 @@ public final class DirectApiModelChannel implements ModelChannel {
             String prompt,
             List<PromptImage> images,
             Consumer<String> onDelta) {
+        return complete(prompt, images, List.of(), onDelta);
+    }
+
+    @Override
+    public CompletableFuture<String> complete(
+            String prompt,
+            List<PromptImage> images,
+            List<ChatMessage> history,
+            Consumer<String> onDelta) {
         Objects.requireNonNull(prompt, "prompt");
         List<PromptImage> safeImages = images == null ? List.of() : List.copyOf(images);
+        List<ChatMessage> safeHistory = history == null ? List.of() : List.copyOf(history);
         Consumer<String> listener = onDelta == null ? ignored -> { } : onDelta;
 
         if (!ready()) {
@@ -138,7 +148,7 @@ public final class DirectApiModelChannel implements ModelChannel {
         }
 
         String body = buildRequestBody(
-                config.model(), config.systemPrompt(), prompt, safeImages);
+                config.model(), config.systemPrompt(), prompt, safeImages, safeHistory);
         Request request;
         try {
             request = new Request.Builder()
@@ -229,31 +239,48 @@ public final class DirectApiModelChannel implements ModelChannel {
             String systemPrompt,
             String prompt,
             List<PromptImage> images) {
+        return buildRequestBody(model, systemPrompt, prompt, images, List.of());
+    }
+
+    /** Builds system + history + the new user turn into one Chat Completions payload. */
+    static String buildRequestBody(
+            String model,
+            String systemPrompt,
+            String prompt,
+            List<PromptImage> images,
+            List<ChatMessage> history) {
         JsonObject root = new JsonObject();
         root.addProperty("model", model);
         root.addProperty("stream", true);
 
         JsonArray messages = new JsonArray();
         if (systemPrompt != null && !systemPrompt.isBlank()) {
-            JsonObject system = new JsonObject();
-            system.addProperty("role", "system");
-            system.addProperty("content", systemPrompt);
-            messages.add(system);
+            appendMessage(messages, ChatMessage.system(systemPrompt));
         }
+        if (history != null) {
+            for (ChatMessage message : history) {
+                appendMessage(messages, message);
+            }
+        }
+        appendMessage(messages, ChatMessage.user(prompt, images));
+        root.add("messages", messages);
+        return GSON.toJson(root);
+    }
 
-        JsonObject user = new JsonObject();
-        user.addProperty("role", "user");
-        if (images == null || images.isEmpty()) {
-            user.addProperty("content", prompt);
+    private static void appendMessage(JsonArray messages, ChatMessage message) {
+        JsonObject json = new JsonObject();
+        json.addProperty("role", message.role());
+        if (message.images().isEmpty()) {
+            json.addProperty("content", message.text());
         } else {
             JsonArray content = new JsonArray();
-            if (prompt != null && !prompt.isEmpty()) {
+            if (!message.text().isBlank()) {
                 JsonObject text = new JsonObject();
                 text.addProperty("type", "text");
-                text.addProperty("text", prompt);
+                text.addProperty("text", message.text());
                 content.add(text);
             }
-            for (PromptImage image : images) {
+            for (PromptImage image : message.images()) {
                 JsonObject part = new JsonObject();
                 part.addProperty("type", "image_url");
                 JsonObject imageUrl = new JsonObject();
@@ -262,11 +289,9 @@ public final class DirectApiModelChannel implements ModelChannel {
                 part.add("image_url", imageUrl);
                 content.add(part);
             }
-            user.add("content", content);
+            json.add("content", content);
         }
-        messages.add(user);
-        root.add("messages", messages);
-        return GSON.toJson(root);
+        messages.add(json);
     }
 
     private void readSuccessful(

@@ -25,4 +25,17 @@ public interface ModelChannel {
             String prompt,
             List<PromptImage> images,
             Consumer<String> onDelta);
+
+    /**
+     * Streams one completion with prior conversation turns. {@code history} holds
+     * earlier user/assistant messages; {@code prompt} is the new user turn. The
+     * default drops the history so simple channels keep their stateless behaviour.
+     */
+    default CompletableFuture<String> complete(
+            String prompt,
+            List<PromptImage> images,
+            List<ChatMessage> history,
+            Consumer<String> onDelta) {
+        return complete(prompt, images, onDelta);
+    }
 }

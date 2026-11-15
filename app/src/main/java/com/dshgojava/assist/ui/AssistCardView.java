@@ -70,7 +70,6 @@ public final class AssistCardView extends FrameLayout {
     private final ScrollView answerScroll;
     private final TextView answer;
     private final TextView status;
-    private final TextView followUpHint;
     private final TextView actionSheetTitle;
     private final HorizontalScrollView actionSheetScroll;
     private final LinearLayout actionSheetRow;
@@ -87,7 +86,6 @@ public final class AssistCardView extends FrameLayout {
 
     private QuickTask task;
     private AssistResult lastResult = AssistResult.idle();
-    private boolean followUpUsed;
     private boolean retryAvailable;
     private Pending pending;
     private boolean scheduled;
@@ -163,16 +161,6 @@ public final class AssistCardView extends FrameLayout {
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
         content.addView(answerScroll, new FrameLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
-
-        followUpHint = new TextView(context);
-        followUpHint.setText(R.string.assist_followup_used);
-        followUpHint.setTextColor(palette.faint());
-        followUpHint.setTextSize(11);
-        followUpHint.setVisibility(GONE);
-        LinearLayout.LayoutParams hintParams = new LinearLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        hintParams.topMargin = dp(6);
-        panel.addView(followUpHint, hintParams);
 
         actionSheetTitle = new TextView(context);
         actionSheetTitle.setText(R.string.assist_action_sheet_title);
@@ -284,16 +272,16 @@ public final class AssistCardView extends FrameLayout {
         this.task = task;
         title.setText(task == null ? getContext().getString(R.string.assist_menu_title)
                 : task.title());
-        render(lastResult, followUpUsed, retryAvailable);
+        render(lastResult, retryAvailable);
     }
 
-    public void render(AssistResult result, boolean followUpUsed, boolean retryAvailable) {
+    public void render(AssistResult result, boolean retryAvailable) {
         AssistResult snapshot = result == null ? AssistResult.idle() : result;
         if (Looper.myLooper() != Looper.getMainLooper()) {
-            main.post(() -> enqueue(snapshot, followUpUsed, retryAvailable));
+            main.post(() -> enqueue(snapshot, retryAvailable));
             return;
         }
-        enqueue(snapshot, followUpUsed, retryAvailable);
+        enqueue(snapshot, retryAvailable);
     }
 
     public boolean askOpen() {
@@ -336,8 +324,8 @@ public final class AssistCardView extends FrameLayout {
         return super.dispatchKeyEvent(event);
     }
 
-    private void enqueue(AssistResult result, boolean used, boolean retryable) {
-        pending = new Pending(result, used, retryable);
+    private void enqueue(AssistResult result, boolean retryable) {
+        pending = new Pending(result, retryable);
         if (result.terminal()) {
             main.removeCallbacks(flush);
             scheduled = false;
@@ -367,10 +355,8 @@ public final class AssistCardView extends FrameLayout {
 
     private void apply(Pending next) {
         lastResult = next.result();
-        followUpUsed = next.followUpUsed();
         retryAvailable = next.retryAvailable();
-        CardUiState.State state = CardUiState.from(
-                lastResult, followUpUsed, retryAvailable);
+        CardUiState.State state = CardUiState.from(lastResult, retryAvailable);
 
         skeleton.setVisibility(state.skeleton() ? VISIBLE : GONE);
         answerScroll.setVisibility(state.textVisible() || lastResult.error() != null
@@ -403,7 +389,6 @@ public final class AssistCardView extends FrameLayout {
         setEnabled(ask, state.askEnabled(), 0.35f);
         retry.setVisibility(state.retryEnabled() ? VISIBLE : GONE);
         stop.setVisibility(state.stopEnabled() ? VISIBLE : GONE);
-        followUpHint.setVisibility(state.askHintVisible() ? VISIBLE : GONE);
         renderActions();
         invalidate();
     }
@@ -439,7 +424,7 @@ public final class AssistCardView extends FrameLayout {
     }
 
     private void openAsk() {
-        if (followUpUsed || task == null || lastResult.stage() != Stage.DONE
+        if (task == null || lastResult.stage() != Stage.DONE
                 || lastResult.text().isBlank()) {
             return;
         }
@@ -448,7 +433,6 @@ public final class AssistCardView extends FrameLayout {
         askBar.setBusy(false);
         askBar.setVisibility(VISIBLE);
         askBar.open();
-        followUpHint.setVisibility(GONE);
     }
 
     private void showStatus(int text, boolean error) {
@@ -603,5 +587,5 @@ public final class AssistCardView extends FrameLayout {
         return mode == Configuration.UI_MODE_NIGHT_YES;
     }
 
-    private record Pending(AssistResult result, boolean followUpUsed, boolean retryAvailable) { }
+    private record Pending(AssistResult result, boolean retryAvailable) { }
 }

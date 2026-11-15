@@ -105,8 +105,7 @@
     <string name="assist_ask_hint">继续追问</string>
     <string name="assist_ask_send">发送</string>
     <string name="assist_ask_cancel">取消</string>
-    <string name="assist_followup_limit">仅支持 1 轮追问</string>
-    <string name="assist_followup_used">该结果已使用过唯一一次追问</string>
+    <string name="assist_followup_limit">可连续追问</string>
     <string name="assist_followup_empty">请先输入追问内容</string>
 
     <string name="assist_action_sheet_title">可执行动作</string>

@@ -65,12 +65,12 @@ public final class AssistCardLayer implements AssistCardView.Listener,
     private AssistResult current = AssistResult.idle();
     private CardPlacement.Placement placement;
     private ValueAnimator slide;
-    private boolean followUpUsed;
+    private ValueAnimator imeLift;
+    private boolean followUpStarted;
     private boolean asking;
     private boolean dismissing;
     private boolean captureHidden;
     private boolean initialRecorded;
-    private boolean followUpRecorded;
     private int baseY;
 
     public AssistCardLayer(Context context, WindowManager windows, int windowType,
@@ -121,11 +121,10 @@ public final class AssistCardLayer implements AssistCardView.Listener,
         this.run = run;
         this.initialRetry = retry;
         this.current = run.state().state();
-        this.followUpUsed = false;
+        this.followUpStarted = false;
         this.asking = false;
         this.dismissing = false;
         this.initialRecorded = false;
-        this.followUpRecorded = false;
 
         AssistCardView next = new AssistCardView(context, this);
         next.bindTask(task);
@@ -147,7 +146,7 @@ public final class AssistCardLayer implements AssistCardView.Listener,
         }
         card = next;
         card.setVisibility(captureHidden ? View.INVISIBLE : View.VISIBLE);
-        card.render(current, false, canRetry());
+        card.render(current, canRetry());
         unsubscribe = run.state().subscribe(state -> {
             if (Looper.myLooper() == Looper.getMainLooper()) {
                 onRunState(state);
@@ -245,10 +244,15 @@ public final class AssistCardLayer implements AssistCardView.Listener,
 
     @Override
     public void onAsk(String question) {
-        if (card == null || followUp == null || current.stage() != Stage.DONE
-                || followUpUsed) return;
-        AssistResult state = followUp.begin(task.title(), current.text(), question);
-        followUpUsed = followUp.used();
+        if (card == null || followUp == null || task == null
+                || current.stage() != Stage.DONE || followUp.busy()) return;
+        AssistResult state;
+        if (followUpStarted) {
+            state = followUp.continueFollowUp(question);
+        } else {
+            state = followUp.begin(task.title(), current.text(), question);
+            followUpStarted = true;
+        }
         if (state.stage() == Stage.FAILED) {
             current = state;
             render();
@@ -258,8 +262,8 @@ public final class AssistCardLayer implements AssistCardView.Listener,
     @Override
     public void onRetry() {
         if (current.stage() != Stage.FAILED) return;
-        if (followUpUsed) {
-            if (followUp != null) followUp.retry();
+        if (followUpStarted && followUp != null && followUp.hasFailed()) {
+            followUp.retry();
         } else if (initialRetry != null) {
             initialRetry.retryModel();
         }
@@ -295,6 +299,10 @@ public final class AssistCardLayer implements AssistCardView.Listener,
         if (card == null || params == null || dismissing) return;
         asking = false;
         ime.reset();
+        if (imeLift != null) {
+            imeLift.cancel();
+            imeLift = null;
+        }
         params.flags |= WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
         params.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING;
         if (placement != null) params.height = placement.height();
@@ -316,11 +324,44 @@ public final class AssistCardLayer implements AssistCardView.Listener,
         int baseHeight = placement == null ? params.height : placement.height();
         int available = Math.max(1, maxBottom - minY - bottom);
         int targetHeight = Math.max(1, Math.min(baseHeight, available));
-        int target = CardPlacement.liftedY(baseY, targetHeight, minY, maxBottom, bottom);
-        if (params.y == target && params.height == targetHeight) return;
-        params.height = targetHeight;
-        params.y = target;
-        updateWindow();
+        int targetY = CardPlacement.liftedY(baseY, targetHeight, minY, maxBottom, bottom);
+        animateLift(targetY, targetHeight);
+    }
+
+    /** Smoothly follows the IME inset so the keyboard never causes a hard resize jump. */
+    private void animateLift(int targetY, int targetHeight) {
+        if (params == null) return;
+        if (params.y == targetY && params.height == targetHeight) return;
+        if (imeLift != null) imeLift.cancel();
+        int fromY = params.y;
+        int fromHeight = params.height;
+        if (!OverlayMotion.on() || (fromY == targetY && fromHeight == targetHeight)) {
+            params.y = targetY;
+            params.height = targetHeight;
+            updateWindow();
+            return;
+        }
+        ValueAnimator animator = ValueAnimator.ofFloat(0f, 1f);
+        animator.setDuration(150L);
+        animator.setInterpolator(OverlayMotion.GLIDE);
+        animator.addUpdateListener(animation -> {
+            if (card == null || params == null) return;
+            float t = animation.getAnimatedFraction();
+            params.y = Math.round(fromY + (targetY - fromY) * t);
+            params.height = Math.round(fromHeight + (targetHeight - fromHeight) * t);
+            updateWindow();
+        });
+        animator.addListener(new android.animation.AnimatorListenerAdapter() {
+            @Override public void onAnimationEnd(android.animation.Animator animation) {
+                imeLift = null;
+            }
+
+            @Override public void onAnimationCancel(android.animation.Animator animation) {
+                imeLift = null;
+            }
+        });
+        imeLift = animator;
+        animator.start();
     }
 
     @Override
@@ -333,7 +374,7 @@ public final class AssistCardLayer implements AssistCardView.Listener,
     }
 
     private void onRunState(AssistResult state) {
-        if (card == null || dismissing || followUpUsed) return;
+        if (card == null || dismissing || followUpStarted) return;
         current = state;
         if (!initialRecorded && state.stage() == Stage.DONE) {
             initialRecorded = true;
@@ -345,15 +386,10 @@ public final class AssistCardLayer implements AssistCardView.Listener,
     private void onFollowUpState(AssistResult state) {
         if (card == null || dismissing) return;
         current = state;
-        followUpUsed = followUp.used();
         if (state.terminal()) {
             card.closeAsk(false);
             if (state.stage() == Stage.DONE) {
-                followUpUsed = true;
-                if (!followUpRecorded) {
-                    followUpRecorded = true;
-                    record(state.text(), true);
-                }
+                record(state.text(), true);
             }
         }
         render();
@@ -365,13 +401,13 @@ public final class AssistCardLayer implements AssistCardView.Listener,
     }
 
     private void render() {
-        if (card != null) card.render(current, followUpUsed, canRetry());
+        if (card != null) card.render(current, canRetry());
     }
 
     private boolean canRetry() {
         if (current.stage() != Stage.FAILED) return false;
-        return followUpUsed && followUp != null
-                ? followUp.used()
+        return followUpStarted && followUp != null
+                ? followUp.hasFailed()
                 : initialRetry != null && initialRetry.canRetryModel();
     }
 
@@ -465,6 +501,10 @@ public final class AssistCardLayer implements AssistCardView.Listener,
         asking = false;
         dismissing = false;
         ime.reset();
+        if (imeLift != null) {
+            imeLift.cancel();
+            imeLift = null;
+        }
         if (unsubscribe != null) {
             unsubscribe.run();
             unsubscribe = null;
@@ -480,9 +520,8 @@ public final class AssistCardLayer implements AssistCardView.Listener,
             }
         }
         current = AssistResult.idle();
-        followUpUsed = false;
+        followUpStarted = false;
         initialRecorded = false;
-        followUpRecorded = false;
         task = null;
         initialRetry = null;
     }

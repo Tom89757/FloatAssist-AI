@@ -108,6 +108,26 @@ class DirectApiModelChannelTest {
     }
 
     @Test
+    void requestBodyIncludesHistoryMessagesBeforeTheNewUserTurn() {
+        List<ChatMessage> history = List.of(
+                ChatMessage.user("第一问"),
+                ChatMessage.assistant("第一答"));
+        String body = DirectApiModelChannel.buildRequestBody(
+                "model", "system", "第二问", List.of(), history);
+        JsonObject root = JsonParser.parseString(body).getAsJsonObject();
+        JsonArray messages = root.getAsJsonArray("messages");
+
+        assertEquals(4, messages.size());
+        assertEquals("system", messages.get(0).getAsJsonObject().get("role").getAsString());
+        assertEquals("user", messages.get(1).getAsJsonObject().get("role").getAsString());
+        assertEquals("第一问", messages.get(1).getAsJsonObject().get("content").getAsString());
+        assertEquals("assistant", messages.get(2).getAsJsonObject().get("role").getAsString());
+        assertEquals("第一答", messages.get(2).getAsJsonObject().get("content").getAsString());
+        assertEquals("user", messages.get(3).getAsJsonObject().get("role").getAsString());
+        assertEquals("第二问", messages.get(3).getAsJsonObject().get("content").getAsString());
+    }
+
+    @Test
     void nullChannelFailsWithTheDesignedMessage() {
         NullModelChannel channel = NullModelChannel.INSTANCE;
 

@@ -19,7 +19,6 @@ public final class CardUiState {
             boolean copyEnabled,
             boolean shareEnabled,
             boolean askEnabled,
-            boolean askHintVisible,
             boolean stopEnabled,
             boolean retryEnabled,
             Status status
@@ -28,7 +27,7 @@ public final class CardUiState {
 
     private CardUiState() { }
 
-    public static State from(AssistResult result, boolean followUpUsed, boolean retryAvailable) {
+    public static State from(AssistResult result, boolean retryAvailable) {
         Stage stage = result.stage();
         String text = result.text();
         boolean hasText = !text.isBlank();
@@ -48,8 +47,7 @@ public final class CardUiState {
                 result.error() == null ? "" : result.error(),
                 hasText,
                 hasText,
-                stage == Stage.DONE && hasText && !followUpUsed,
-                followUpUsed,
+                stage == Stage.DONE && hasText,
                 !terminal,
                 stage == Stage.FAILED && retryAvailable,
                 status);

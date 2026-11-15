@@ -105,8 +105,7 @@
     <string name="assist_ask_hint">Ask a follow-up</string>
     <string name="assist_ask_send">Send</string>
     <string name="assist_ask_cancel">Cancel</string>
-    <string name="assist_followup_limit">One follow-up only</string>
-    <string name="assist_followup_used">This result already used its one follow-up</string>
+    <string name="assist_followup_limit">Continue the conversation</string>
     <string name="assist_followup_empty">Type a follow-up first</string>
 
     <string name="assist_action_sheet_title">Actions</string>

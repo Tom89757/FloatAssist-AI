@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 class CardUiStateTest {
     @Test
     void gatheringShowsSkeletonAndStopWithoutFakeText() {
-        CardUiState.State state = CardUiState.from(AssistResult.gathering(), false, false);
+        CardUiState.State state = CardUiState.from(AssistResult.gathering(), false);
 
         assertTrue(state.skeleton());
         assertFalse(state.textVisible());
@@ -23,7 +23,7 @@ class CardUiStateTest {
 
     @Test
     void thinkingShowsThinkingStatus() {
-        CardUiState.State state = CardUiState.from(AssistResult.thinking(), false, false);
+        CardUiState.State state = CardUiState.from(AssistResult.thinking(), false);
 
         assertTrue(state.skeleton());
         assertEquals(CardUiState.Status.THINKING, state.status());
@@ -31,7 +31,7 @@ class CardUiStateTest {
 
     @Test
     void streamingEnablesCopyShareAndStop() {
-        CardUiState.State state = CardUiState.from(AssistResult.streaming("部分答案"), false, false);
+        CardUiState.State state = CardUiState.from(AssistResult.streaming("部分答案"), false);
 
         assertFalse(state.skeleton());
         assertTrue(state.copyEnabled());
@@ -42,36 +42,31 @@ class CardUiStateTest {
     }
 
     @Test
-    void doneAllowsExactlyOneFollowUp() {
+    void doneAllowsFollowUp() {
         AssistResult done = AssistResult.done("完整答案", java.util.List.of());
 
-        CardUiState.State first = CardUiState.from(done, false, false);
-        assertTrue(first.askEnabled());
-        assertFalse(first.askHintVisible());
-        assertTrue(first.copyEnabled());
-        assertFalse(first.stopEnabled());
-
-        CardUiState.State second = CardUiState.from(done, true, false);
-        assertFalse(second.askEnabled());
-        assertTrue(second.askHintVisible());
+        CardUiState.State state = CardUiState.from(done, false);
+        assertTrue(state.askEnabled());
+        assertTrue(state.copyEnabled());
+        assertFalse(state.stopEnabled());
     }
 
     @Test
     void failedCardOnlyShowsRetryWhenHostSupportsIt() {
         AssistResult failed = AssistResult.failed("网络失败");
 
-        CardUiState.State withoutRetry = CardUiState.from(failed, false, false);
+        CardUiState.State withoutRetry = CardUiState.from(failed, false);
         assertFalse(withoutRetry.retryEnabled());
         assertEquals("网络失败", withoutRetry.error());
         assertFalse(withoutRetry.stopEnabled());
 
-        CardUiState.State withRetry = CardUiState.from(failed, false, true);
+        CardUiState.State withRetry = CardUiState.from(failed, true);
         assertTrue(withRetry.retryEnabled());
     }
 
     @Test
     void cancelledCardIsTerminalAndHasNoActions() {
-        CardUiState.State state = CardUiState.from(AssistResult.cancelled(), false, false);
+        CardUiState.State state = CardUiState.from(AssistResult.cancelled(), false);
 
         assertTrue(state.error().isEmpty());
         assertFalse(state.stopEnabled());
