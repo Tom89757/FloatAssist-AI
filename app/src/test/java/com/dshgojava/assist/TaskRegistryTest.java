@@ -75,7 +75,8 @@ class TaskRegistryTest {
         assertTrue(actions.promptTemplate().contains("time"));
         assertTrue(actions.promptTemplate().contains("phone"));
         assertTrue(TaskRegistry.p0().stream().noneMatch(task -> task.id().equals("screen.actions")));
-        assertEquals(List.of("screen.actions", "voice.transcribe"),
+        assertEquals(List.of("screen.actions", "web.summarize", "web.ask", "web.clip",
+                        "voice.transcribe"),
                 TaskRegistry.p1().stream().map(QuickTask::id).toList());
         assertTrue(TaskRegistry.all().contains(actions));
 

@@ -74,7 +74,7 @@ public final class TaskPreflight {
     private static String sourceMessage(SourceKind source) {
         return switch (source) {
             case SCREEN -> "开启无障碍以读取屏幕";
-            case WEB -> "网页内容不可用";
+            case WEB -> "开启无障碍以读取网页";
             case CLIP -> "剪贴板不可用";
             case IMAGE -> "尚未选择图片";
             case VOICE -> "没有可用的语音引擎";

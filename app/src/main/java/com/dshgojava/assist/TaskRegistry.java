@@ -10,6 +10,9 @@ import java.util.Optional;
 
 /** The single registry of quick-assist tasks. Add a feature here first. */
 public final class TaskRegistry {
+    /** Reads a URL from the clipboard and downloads the page; no accessibility needed. */
+    public static final String WEB_CLIP = "web.clip";
+
     private static final List<QuickTask> P0 = List.of(
             new QuickTask(
                     "screen.summarize",
@@ -110,6 +113,14 @@ public final class TaskRegistry {
                             + "不要编造。\n\n{{text}}",
                     false),
             new QuickTask(
+                    WEB_CLIP,
+                    "总结剪贴板网址",
+                    SourceKind.WEB,
+                    OutputKind.TEXT_CARD,
+                    "请总结下面这个网页的正文，保留关键结论、数字和待办事项，使用简洁的中文分段输出。\n\n"
+                            + "网页正文：\n{{text}}",
+                    false),
+            new QuickTask(
                     "voice.transcribe",
                     "语音转写",
                     SourceKind.VOICE,
@@ -148,6 +159,11 @@ public final class TaskRegistry {
     public static List<QuickTask> bySource(SourceKind source) {
         Objects.requireNonNull(source, "source");
         return ALL.stream().filter(task -> task.source() == source).toList();
+    }
+
+    /** True for the clipboard-URL task, which must not require accessibility. */
+    public static boolean isClipboardWeb(QuickTask task) {
+        return task != null && WEB_CLIP.equals(task.id());
     }
 
     public static String fillPrompt(QuickTask task, CaptureBundle bundle) {

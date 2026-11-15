@@ -461,7 +461,7 @@ public final class AssistOverlayService extends Service {
     private final AssistBall.Listener ballListener = new AssistBall.Listener() {
         @Override
         public void onTaskSelected(QuickTask task) {
-            if (task.source() == SourceKind.CLIP) {
+            if (task.source() == SourceKind.CLIP || TaskRegistry.isClipboardWeb(task)) {
                 AssistCaptureActivity.readClipboard(AssistOverlayService.this, task);
             } else if (task.source() == SourceKind.IMAGE && !imageSource.available()) {
                 AssistCaptureActivity.pickImage(AssistOverlayService.this, task);
@@ -523,7 +523,7 @@ public final class AssistOverlayService extends Service {
     }
 
     private void acceptClipboard(Intent intent) {
-        QuickTask task = taskFrom(intent, SourceKind.CLIP);
+        QuickTask task = clipboardTaskFrom(intent);
         String text = intent == null ? null : intent.getStringExtra(
                 AssistCaptureActivity.EXTRA_CLIP_TEXT);
         if (task == null) {
@@ -562,8 +562,18 @@ public final class AssistOverlayService extends Service {
         return intent.getParcelableExtra(AssistCaptureActivity.EXTRA_IMAGE_URI);
     }
 
-    private static QuickTask taskFrom(Intent intent, SourceKind source) {
+    /** Clipboard bridge tasks: the text group plus the clipboard-URL web task. */
+    private static QuickTask clipboardTaskFrom(Intent intent) {
         if (intent == null) return null;
+        String id = intent.getStringExtra(AssistCaptureActivity.EXTRA_TASK_ID);
+        if (id == null || id.isBlank()) return null;
+        QuickTask task = TaskRegistry.find(id).orElse(null);
+        if (task == null) return null;
+        boolean bridged = task.source() == SourceKind.CLIP || TaskRegistry.isClipboardWeb(task);
+        return bridged ? task : null;
+    }
+
+    private static QuickTask taskFrom(Intent intent, SourceKind source) {        if (intent == null) return null;
         String id = intent.getStringExtra(AssistCaptureActivity.EXTRA_TASK_ID);
         if (id == null || id.isBlank()) return null;
         QuickTask task = TaskRegistry.find(id).orElse(null);

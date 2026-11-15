@@ -51,6 +51,27 @@ class AssistGateTest {
     }
 
     @Test
+    void webGroupAlsoNeedsAccessibility() {
+        AssistGate.Capabilities noA11y = caps(false, true, true, true, true);
+
+        assertEquals(AssistMenuModel.Block.ACCESSIBILITY,
+                AssistGate.blockFor(TaskRegistry.require("web.summarize"), noA11y));
+        assertEquals(AssistMenuModel.Block.NONE,
+                AssistGate.blockFor(TaskRegistry.require("web.summarize"),
+                        caps(true, true, true, true, true)));
+    }
+
+    @Test
+    void clipboardWebTaskWorksWithoutAccessibility() {
+        AssistGate.Capabilities noA11y = caps(false, true, true, true, true);
+
+        assertEquals(AssistMenuModel.Block.ACCESSIBILITY,
+                AssistGate.blockFor(TaskRegistry.require("web.summarize"), noA11y));
+        assertEquals(AssistMenuModel.Block.NONE,
+                AssistGate.blockFor(TaskRegistry.require("web.clip"), noA11y));
+    }
+
+    @Test
     void modelAndVisionAreReportedBeforeAnImageIsSelected() {
         assertEquals(AssistMenuModel.Block.MODEL, AssistGate.blockFor(
                 TaskRegistry.require("image.ocr"), caps(true, false, false, true, false)));

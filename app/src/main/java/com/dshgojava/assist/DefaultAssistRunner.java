@@ -116,7 +116,7 @@ public final class DefaultAssistRunner implements AssistRunner {
             boolean sourceAvailable = false;
             if (source != null) {
                 try {
-                    sourceAvailable = source.available();
+                    sourceAvailable = source.availableFor(task);
                 } catch (RuntimeException error) {
                     fail(failureMessage(error));
                     return;

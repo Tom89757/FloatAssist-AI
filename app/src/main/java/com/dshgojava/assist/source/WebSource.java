@@ -1,10 +1,14 @@
 package com.dshgojava.assist.source;
 
 import android.accessibilityservice.AccessibilityService;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import com.dshgojava.assist.A11yBridge;
 import com.dshgojava.assist.AssistRequest;
+import com.dshgojava.assist.QuickTask;
 import com.dshgojava.assist.SourceKind;
+import com.dshgojava.assist.TaskRegistry;
 import com.dshgojava.assist.platform.Capture;
 import com.dshgojava.assist.platform.TreeCapture;
 import com.dshgojava.assist.platform.UiBox;
@@ -66,13 +70,24 @@ public final class WebSource implements AssistSource {
         return A11yBridge.isConnected();
     }
 
+    /** 剪贴板网址任务直接联网抓取，不需要无障碍。 */
+    @Override
+    public boolean availableFor(QuickTask task) {
+        if (TaskRegistry.isClipboardWeb(task)) {
+            return context.getSystemService(ClipboardManager.class) != null;
+        }
+        return available();
+    }
+
     @Override
     public CompletableFuture<CaptureBundle> gather(AssistRequest request) {
-        if (!A11yBridge.isConnected()) {
+        boolean clipboardTask = TaskRegistry.isClipboardWeb(request.task());
+        if (!clipboardTask && !A11yBridge.isConnected()) {
             return SourceFutures.failed(new CaptureException("开启无障碍以读取网页"));
         }
         try {
-            return SourceFutures.supply(executor, () -> gatherNow(request));
+            return SourceFutures.supply(executor,
+                    () -> clipboardTask ? gatherClipboardUrl(request) : gatherNow(request));
         } catch (RejectedExecutionException error) {
             return SourceFutures.failed(new CaptureException("网页读取已停止"));
         }
@@ -94,14 +109,22 @@ public final class WebSource implements AssistSource {
         try {
             String pkg = capture == null ? null : capture.packageName();
             String url = null;
+            boolean addressBar = false;
+            boolean webView = false;
             if (capture != null) {
                 for (UiWindow window : capture.windows()) {
-                    url = extractUrl(window.root());
-                    if (url != null) break;
+                    String found = extractUrl(window.root());
+                    if (found != null) {
+                        url = found;
+                        break;
+                    }
+                    addressBar = addressBar || hasAddressBar(window.root());
+                    webView = webView || hasWebView(window.root());
                 }
             }
-            // 两级判定：白名单命中，或树里找到了地址栏 URL。
-            boolean browser = BROWSERS.contains(pkg) || url != null;
+            // 四级判定：白名单 / 地址栏 URL / 地址栏输入框 / 树里存在 WebView 容器。
+            // 小米浏览器地址栏只显示标题，Via 等第三方浏览器甚至不暴露地址栏，靠 WebView 兜底。
+            boolean browser = BROWSERS.contains(pkg) || url != null || addressBar || webView;
             if (!browser) throw new CaptureException("当前不是网页");
 
             String body = capture == null
@@ -124,6 +147,59 @@ public final class WebSource implements AssistSource {
         }
     }
 
+    /** 剪贴板网址任务：读网址 → 联网下载 → 抽正文，不依赖无障碍树。 */
+    private CaptureBundle gatherClipboardUrl(AssistRequest request) {
+        String text = request.context().get(ClipSource.CONTEXT_TEXT);
+        if (text == null) text = readClipboard();
+        String url = WebClip.firstUrl(text);
+        if (url == null) throw new CaptureException("剪贴板里没有网址");
+        String html = WebClip.fetch(url);
+        String body = HtmlText.toText(html, ScreenTextExtractor.DEFAULT_MAX_CHARS);
+        if (body.isBlank()) throw new CaptureException("网页正文无法读取");
+
+        Map<String, String> meta = new LinkedHashMap<>();
+        meta.put("source", "web");
+        meta.put("url", url);
+        meta.put("mode", "clipboard");
+        return new CaptureBundle("网页地址：" + url + "\n\n" + body, List.of(), meta);
+    }
+
+    private String readClipboard() {
+        ClipboardManager clipboard = context.getSystemService(ClipboardManager.class);
+        if (clipboard == null) throw new CaptureException("剪贴板不可用");
+        ClipData clip;
+        try {
+            clip = clipboard.getPrimaryClip();
+        } catch (SecurityException error) {
+            throw new CaptureException("系统限制了剪贴板读取，请回到应用后重试", error);
+        }
+        if (clip == null || clip.getItemCount() == 0) {
+            throw new CaptureException("剪贴板为空或系统限制读取");
+        }
+        StringBuilder out = new StringBuilder();
+        for (int i = 0; i < clip.getItemCount(); i++) {
+            ClipData.Item item = clip.getItemAt(i);
+            if (item == null) continue;
+            CharSequence value = item.coerceToText(context);
+            if (value != null && value.length() > 0) {
+                if (out.length() > 0) out.append('\n');
+                out.append(value);
+            }
+        }
+        if (out.length() == 0) throw new CaptureException("剪贴板为空或系统限制读取");
+        return out.toString();
+    }
+
+    /** 页面容器特征：第三方浏览器（Via 等）不暴露地址栏，但一定暴露 WebView 节点。 */
+    private static boolean hasWebView(UiNode node) {
+        if (node == null) return false;
+        if (node.className().contains("WebView")) return true;
+        for (UiNode child : node.children()) {
+            if (hasWebView(child)) return true;
+        }
+        return false;
+    }
+
     /** 优先找可编辑且文本是 URL 的地址栏节点，再按 viewId 特征兜底。 */
     private static String extractUrl(UiNode node) {
         if (node == null) return null;
@@ -138,6 +214,20 @@ public final class WebSource implements AssistSource {
             if (found != null) return found;
         }
         return null;
+    }
+
+    /** 地址栏输入框特征：可编辑且 viewId 带 url/address/omnibox。 */
+    private static boolean hasAddressBar(UiNode node) {
+        if (node == null) return false;
+        String id = node.viewId() == null ? "" : node.viewId().toLowerCase(Locale.ROOT);
+        if (node.editable() && (id.contains("url") || id.contains("address")
+                || id.contains("omnibox"))) {
+            return true;
+        }
+        for (UiNode child : node.children()) {
+            if (hasAddressBar(child)) return true;
+        }
+        return false;
     }
 
     private static boolean looksLikeUrl(String text) {

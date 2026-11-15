@@ -2,6 +2,7 @@ package com.dshgojava.assist.ui;
 
 import com.dshgojava.assist.QuickTask;
 import com.dshgojava.assist.SourceKind;
+import com.dshgojava.assist.TaskRegistry;
 import java.util.Objects;
 
 /** Pure task availability rules shared by the service and unit tests. */
@@ -31,7 +32,9 @@ public final class AssistGate {
     public static AssistMenuModel.Block blockFor(QuickTask task, Capabilities capabilities) {
         Objects.requireNonNull(task, "task");
         Objects.requireNonNull(capabilities, "capabilities");
-        if (task.source() == SourceKind.SCREEN && !capabilities.accessibility()) {
+        boolean needsAccessibility = task.source() == SourceKind.SCREEN
+                || (task.source() == SourceKind.WEB && !TaskRegistry.isClipboardWeb(task));
+        if (needsAccessibility && !capabilities.accessibility()) {
             return AssistMenuModel.Block.ACCESSIBILITY;
         }
         if (!capabilities.modelReady()) {
