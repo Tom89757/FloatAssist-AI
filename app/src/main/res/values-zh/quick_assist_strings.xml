@@ -95,6 +95,7 @@
     <string name="assist_status_retrying">正在重试模型调用…</string>
 
     <string name="assist_card_copy">复制</string>
+    <string name="assist_card_select_all">全选</string>
     <string name="assist_card_share">分享</string>
     <string name="assist_card_ask">追问</string>
     <string name="assist_card_close">关闭</string>

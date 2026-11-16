@@ -95,6 +95,7 @@
     <string name="assist_status_retrying">Retrying the model call…</string>
 
     <string name="assist_card_copy">Copy</string>
+    <string name="assist_card_select_all">Select all</string>
     <string name="assist_card_share">Share</string>
     <string name="assist_card_ask">Ask</string>
     <string name="assist_card_close">Close</string>

@@ -8,6 +8,8 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.text.Selection;
+import android.text.Spannable;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -76,6 +78,7 @@ public final class AssistCardView extends FrameLayout {
     private final TextView actionSheetStatus;
     private final AssistAskBar askBar;
     private final TextView copy;
+    private final TextView selectAll;
     private final TextView share;
     private final TextView ask;
     private final TextView retry;
@@ -223,7 +226,9 @@ public final class AssistCardView extends FrameLayout {
         actions.setGravity(Gravity.CENTER_VERTICAL);
 
         copy = pill(context, R.string.assist_card_copy, palette.ink(), palette.tonal());
-        copy.setOnClickListener(view -> listener.onCopy(lastResult.text()));
+        copy.setOnClickListener(view -> listener.onCopy(copyText()));
+        selectAll = pill(context, R.string.assist_card_select_all, palette.ink(), palette.tonal());
+        selectAll.setOnClickListener(view -> selectAll());
         share = pill(context, R.string.assist_card_share, palette.ink(), palette.tonal());
         share.setOnClickListener(view -> listener.onShare(lastResult.text()));
         ask = pill(context, R.string.assist_card_ask,
@@ -239,6 +244,7 @@ public final class AssistCardView extends FrameLayout {
                 palette.ink(), palette.tonal());
         close.setOnClickListener(view -> listener.onClose());
         addAction(actions, copy);
+        addAction(actions, selectAll);
         addAction(actions, share);
         addAction(actions, ask);
         addAction(actions, retry);
@@ -388,6 +394,7 @@ public final class AssistCardView extends FrameLayout {
         }
 
         setEnabled(copy, state.copyEnabled(), 0.4f);
+        setEnabled(selectAll, state.copyEnabled(), 0.4f);
         setEnabled(share, state.shareEnabled(), 0.4f);
         setEnabled(ask, state.askEnabled(), 0.35f);
         retry.setVisibility(state.retryEnabled() ? VISIBLE : GONE);
@@ -441,6 +448,22 @@ public final class AssistCardView extends FrameLayout {
         askBar.setVisibility(VISIBLE);
         listener.onAskOpened();
         askBar.open();
+    }
+
+    private void selectAll() {
+        CharSequence text = answer.getText();
+        if (text instanceof Spannable spannable) {
+            Selection.setSelection(spannable, 0, text.length());
+        }
+    }
+
+    private String copyText() {
+        int start = answer.getSelectionStart();
+        int end = answer.getSelectionEnd();
+        if (start >= 0 && end > start) {
+            return answer.getText().subSequence(start, end).toString();
+        }
+        return lastResult.text();
     }
 
     private void showStatus(int text, boolean error) {
