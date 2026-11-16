@@ -25,6 +25,8 @@
     <string name="assist_role_current">当前全局生效角色为%1$s</string>
     <string name="assist_role_create">新增角色</string>
     <string name="assist_role_chat">发起对话</string>
+    <string name="assist_role_delete">删除</string>
+    <string name="assist_role_deleted">已删除角色：%1$s</string>
     <string name="assist_role_edit_title">新增角色</string>
     <string name="assist_role_identity">角色身份（也是显示名称）</string>
     <string name="assist_role_identity_hint">例如：资深股票投资分析师</string>

@@ -493,6 +493,15 @@ public final class AssistOverlayService extends Service {
         cardLayer.showChat(RoleMenu.chatTask());
     }
 
+    private void onRoleDeleted(QuickTask task) {
+        String roleId = RoleMenu.roleId(task == null ? "" : task.id());
+        if (!roleStore.delete(roleId)) return;
+        menuModel = buildMenuModel();
+        if (ball != null) ball.updateModel(menuModel);
+        reloadPreferences();
+        toast(getString(R.string.assist_role_deleted, task == null ? "" : task.title()));
+    }
+
     private void recordHistory(QuickTask task, String text, boolean followUp) {
         if (task == null || text == null || text.isBlank()) return;
         ExecutorService current = io;
@@ -535,6 +544,11 @@ public final class AssistOverlayService extends Service {
         @Override
         public void onUnavailable(QuickTask task, AssistMenuModel.Block block) {
             handleUnavailable(task, block);
+        }
+
+        @Override
+        public void onDeleteRole(QuickTask task) {
+            onRoleDeleted(task);
         }
 
         @Override

@@ -35,6 +35,11 @@ public final class RoleMenu {
         return taskId != null && taskId.startsWith(PREFIX);
     }
 
+    /** True when a role selector row represents a user-created (deletable) role. */
+    public static boolean isCustomRoleTask(String taskId) {
+        return roleId(taskId).startsWith("custom-");
+    }
+
     public static QuickTask createTask() {
         return new QuickTask(CREATE_ID, "新增角色", SourceKind.ROLE, OutputKind.TEXT_CARD, "{{text}}", false);
     }

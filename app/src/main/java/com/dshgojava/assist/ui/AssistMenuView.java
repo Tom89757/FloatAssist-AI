@@ -31,6 +31,8 @@ public final class AssistMenuView extends FrameLayout {
 
         void onClose();
 
+        void onDeleteRole(QuickTask task);
+
         /** Called after root/group navigation so the window can be re-measured. */
         void onContentChanged();
     }
@@ -214,8 +216,56 @@ public final class AssistMenuView extends FrameLayout {
 
     private void addRoleRow(AssistMenuModel.TaskRow row) {
         boolean selected = model.isSelectedRole(row.task());
-        addRow(taskLabel(row.task()), null, true, true,
-                () -> onRoleTaskSelected(row.task()), selected);
+        if (RoleMenu.isCustomRoleTask(row.task().id())) {
+            addDeletableRoleRow(row.task(), selected);
+        } else {
+            addRow(taskLabel(row.task()), null, true, true,
+                    () -> onRoleTaskSelected(row.task()), selected);
+        }
+    }
+
+    private void addDeletableRoleRow(QuickTask task, boolean selected) {
+        LinearLayout row = new LinearLayout(getContext());
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setMinimumHeight(dp(54));
+        row.setPadding(dp(12), dp(9), dp(12), dp(9));
+        row.setBackground(selected ? highlightBackground() : rowBackground(true));
+        row.setAlpha(1f);
+
+        TextView name = new TextView(getContext());
+        name.setText(taskLabel(task));
+        name.setTextColor(selected ? palette.accent() : palette.ink());
+        name.setTextSize(14);
+        name.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        row.addView(name, new LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+        TextView delete = new TextView(getContext());
+        delete.setText(R.string.assist_role_delete);
+        delete.setTextColor(palette.danger());
+        delete.setTextSize(12);
+        delete.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        delete.setGravity(Gravity.CENTER);
+        delete.setPadding(dp(10), dp(6), dp(4), dp(6));
+        delete.setClickable(true);
+        delete.setFocusable(true);
+        delete.setOnClickListener(view -> {
+            Listener current = listener;
+            if (current != null) current.onDeleteRole(task);
+        });
+        row.addView(delete, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        row.setClickable(true);
+        row.setFocusable(true);
+        row.setOnClickListener(view -> onRoleTaskSelected(task));
+        row.setContentDescription(taskLabel(task));
+
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.topMargin = dp(4);
+        rows.addView(row, params);
     }
 
     private void addRoleActions() {

@@ -53,6 +53,19 @@ public final class RoleStore {
         preferences.edit().putString(K_CUSTOM, GSON.toJson(roles)).apply();
     }
 
+    /** Removes a user-created role; if it was selected, falls back to the default role. */
+    public boolean delete(String id) {
+        if (id == null || id.isBlank()) return false;
+        List<Role> roles = custom();
+        boolean removed = roles.removeIf(existing -> existing.id().equals(id));
+        if (!removed) return false;
+        preferences.edit().putString(K_CUSTOM, GSON.toJson(roles)).apply();
+        if (id.equals(selectedId())) {
+            select(Role.NONE_ID);
+        }
+        return removed;
+    }
+
     /** New unique id for a user-created role. */
     public static String newCustomId() {
         return "custom-" + System.currentTimeMillis();

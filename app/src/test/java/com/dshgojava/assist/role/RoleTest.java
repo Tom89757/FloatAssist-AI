@@ -60,6 +60,13 @@ class RoleTest {
     }
 
     @Test
+    void customRoleTaskIsDeletable() {
+        assertTrue(RoleMenu.isCustomRoleTask("role.custom-1"));
+        assertFalse(RoleMenu.isCustomRoleTask("role.stock"));
+        assertFalse(RoleMenu.isCustomRoleTask(RoleMenu.NONE_ID));
+    }
+
+    @Test
     void gsonRoundTripsRoleForPersistence() {
         Role role = new Role("custom-1", "我的角色", "身份", "专长", "口吻", "输出", "边界", false);
         Gson gson = new Gson();

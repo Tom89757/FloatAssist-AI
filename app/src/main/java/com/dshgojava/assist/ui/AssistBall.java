@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.WindowManager;
 import com.dshgojava.assist.QuickTask;
 import com.dshgojava.assist.R;
+import com.dshgojava.assist.SourceKind;
 import com.dshgojava.assist.platform.BallGeometry;
 import com.dshgojava.assist.platform.MarkLook;
 import com.dshgojava.assist.platform.OverlayBall;
@@ -18,6 +19,7 @@ import com.dshgojava.assist.platform.OverlayMotion;
 import com.dshgojava.assist.platform.OverlayPalette;
 import com.dshgojava.assist.platform.OverlayPrefs;
 import com.dshgojava.assist.platform.OverlayViewUtils;
+import com.dshgojava.assist.role.RoleMenu;
 import java.util.function.Supplier;
 
 /** Owns the floating ball window and its adjacent two-level menu window. */
@@ -34,6 +36,8 @@ public final class AssistBall {
         void onLongPressEnd(boolean cancelled);
 
         void onSettings();
+
+        void onDeleteRole(QuickTask task);
 
         void onMenuFailed();
     }
@@ -223,6 +227,11 @@ public final class AssistBall {
         @Override
         public void onClose() {
             dismissMenu();
+        }
+
+        @Override
+        public void onDeleteRole(QuickTask task) {
+            listener.onDeleteRole(task);
         }
 
         @Override

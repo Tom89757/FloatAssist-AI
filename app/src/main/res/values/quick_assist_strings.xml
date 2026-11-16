@@ -25,6 +25,8 @@
     <string name="assist_role_current">Current global role: %1$s</string>
     <string name="assist_role_create">New role</string>
     <string name="assist_role_chat">Start chat</string>
+    <string name="assist_role_delete">Delete</string>
+    <string name="assist_role_deleted">Deleted role: %1$s</string>
     <string name="assist_role_edit_title">New role</string>
     <string name="assist_role_identity">Role identity (also the display name)</string>
     <string name="assist_role_identity_hint">e.g. senior stock analyst</string>
