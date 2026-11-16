@@ -173,7 +173,7 @@ public final class AssistOverlayService extends Service {
         available.put(SourceKind.WEB, webSource);
         sources = Map.copyOf(available);
         runner = new DefaultAssistRunner(model, sources);
-        menuModel = AssistMenuModel.all(roleStore.custom());
+        menuModel = buildMenuModel();
         captureRegistration = A11yBridge.registerCaptureOverlay(this::setOverlaysHiddenForCapture);
         a11yConnectionListener = A11yBridge.addConnectionListener(this::onA11yConnectionChanged);
         reloadPreferences();
@@ -436,7 +436,7 @@ public final class AssistOverlayService extends Service {
                 : NullModelChannel.INSTANCE;
         model = next;
         if (sources != null) runner = new DefaultAssistRunner(next, sources);
-        menuModel = AssistMenuModel.all(roleStore.custom());
+        menuModel = buildMenuModel();
         if (ball != null) ball.updateModel(menuModel);
         if (cardLayer != null) {
             AssistCardLayer previous = cardLayer;
@@ -467,6 +467,10 @@ public final class AssistOverlayService extends Service {
             }
             return;
         }
+        if (RoleMenu.CHAT_ID.equals(taskId)) {
+            startRoleChat();
+            return;
+        }
         String roleId = RoleMenu.NONE_ID.equals(taskId) ? Role.NONE_ID : RoleMenu.roleId(taskId);
         roleStore.select(roleId);
         Role role = com.dshgojava.assist.role.RoleCatalog
@@ -474,6 +478,19 @@ public final class AssistOverlayService extends Service {
         Log.i(TAG, "role selected: " + roleId + " (" + role.name() + ")");
         reloadPreferences();
         toast(getString(R.string.assist_role_selected, role.name()));
+    }
+
+    private AssistMenuModel buildMenuModel() {
+        Role selected = roleStore.selected();
+        return AssistMenuModel.all(roleStore.custom(), selected.id(), selected.name());
+    }
+
+    private void startRoleChat() {
+        if (cardLayer == null) {
+            toast(R.string.assist_overlay_attach_failed);
+            return;
+        }
+        cardLayer.showChat(RoleMenu.chatTask());
     }
 
     private void recordHistory(QuickTask task, String text, boolean followUp) {

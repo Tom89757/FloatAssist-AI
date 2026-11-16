@@ -46,7 +46,7 @@ public final class RoleCatalog {
     );
 
     public static Role none() {
-        return new Role(Role.NONE_ID, "无角色", "通用助手", "", "", "", "", true);
+        return new Role(Role.NONE_ID, "默认角色", "通用助手", "", "", "", "", true);
     }
 
     public static Optional<Role> find(String id, List<Role> customRoles) {

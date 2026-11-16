@@ -431,6 +431,11 @@ public final class AssistCardView extends FrameLayout {
                 || lastResult.text().isBlank()) {
             return;
         }
+        showAskBar();
+    }
+
+    /** Opens the follow-up composer; used by both the ask button and free chat. */
+    void showAskBar() {
         askBar.clear();
         askBar.setBusy(false);
         askBar.setVisibility(VISIBLE);

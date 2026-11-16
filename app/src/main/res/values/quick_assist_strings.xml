@@ -22,6 +22,9 @@
     <string name="assist_group_role">Role</string>
     <string name="assist_role_selected">Switched to role: %1$s</string>
     <string name="assist_role_create_failed">Could not open the role editor</string>
+    <string name="assist_role_current">Current global role: %1$s</string>
+    <string name="assist_role_create">New role</string>
+    <string name="assist_role_chat">Start chat</string>
     <string name="assist_role_edit_title">New role</string>
     <string name="assist_role_identity">Role identity (also the display name)</string>
     <string name="assist_role_identity_hint">e.g. senior stock analyst</string>

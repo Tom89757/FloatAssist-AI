@@ -79,6 +79,18 @@ public final class AssistFollowUp {
         }
     }
 
+    /** Starts a free chat with no task context; the message is the first user turn. */
+    public AssistResult chat(String message) {
+        String clean = message == null ? "" : message.strip();
+        synchronized (lock) {
+            if (clean.isEmpty()) return publish(AssistResult.failed(BLANK_QUESTION));
+            if (busy) return publish(AssistResult.failed(BUSY));
+            if (!model.ready()) return publish(AssistResult.failed(NOT_CONFIGURED));
+            started = true;
+            return launchLocked(clean);
+        }
+    }
+
     /** Asks another question, carrying the whole prior conversation as history. */
     public AssistResult continueFollowUp(String question) {
         String clean = question == null ? "" : question.strip();

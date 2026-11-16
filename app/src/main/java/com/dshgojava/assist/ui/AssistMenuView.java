@@ -18,6 +18,7 @@ import com.dshgojava.assist.R;
 import com.dshgojava.assist.SourceKind;
 import com.dshgojava.assist.platform.OverlayPalette;
 import com.dshgojava.assist.platform.OverlayViewUtils;
+import com.dshgojava.assist.role.RoleMenu;
 
 /** Native two-level menu: source groups first, then the tasks in that group. */
 public final class AssistMenuView extends FrameLayout {
@@ -160,6 +161,8 @@ public final class AssistMenuView extends FrameLayout {
             for (AssistMenuModel.GroupRow group : model.groups(gate)) {
                 addGroup(group);
             }
+        } else if (current == AssistMenuModel.Group.ROLE) {
+            renderRoleGroup();
         } else {
             AssistMenuModel.GroupRow group = model.group(current, gate);
             for (AssistMenuModel.TaskRow task : group.tasks()) {
@@ -175,7 +178,9 @@ public final class AssistMenuView extends FrameLayout {
         int total = group.tasks().size();
         boolean interactive = total > 0;
         String detail;
-        if (total == 0) {
+        if (group.group() == AssistMenuModel.Group.ROLE) {
+            detail = getContext().getString(R.string.assist_role_current, model.selectedRoleName());
+        } else if (total == 0) {
             detail = getContext().getString(R.string.assist_menu_coming_soon);
         } else if (group.available()) {
             detail = group.availableCount() == total
@@ -199,19 +204,89 @@ public final class AssistMenuView extends FrameLayout {
         });
     }
 
+    private void renderRoleGroup() {
+        AssistMenuModel.GroupRow group = model.group(AssistMenuModel.Group.ROLE, gate);
+        for (AssistMenuModel.TaskRow row : group.tasks()) {
+            addRoleRow(row);
+        }
+        addRoleActions();
+    }
+
+    private void addRoleRow(AssistMenuModel.TaskRow row) {
+        boolean selected = model.isSelectedRole(row.task());
+        addRow(taskLabel(row.task()), null, true, true,
+                () -> onRoleTaskSelected(row.task()), selected);
+    }
+
+    private void addRoleActions() {
+        LinearLayout actions = new LinearLayout(getContext());
+        actions.setOrientation(LinearLayout.HORIZONTAL);
+        actions.setGravity(Gravity.CENTER);
+
+        TextView create = roleActionButton(
+                getContext().getString(R.string.assist_role_create),
+                palette.onAccent(), palette.accent());
+        create.setOnClickListener(view -> onRoleTaskSelected(RoleMenu.createTask()));
+
+        TextView chat = roleActionButton(
+                getContext().getString(R.string.assist_role_chat),
+                palette.onAccentSoft(), palette.accentSoft());
+        chat.setOnClickListener(view -> onRoleTaskSelected(RoleMenu.chatTask()));
+
+        LinearLayout.LayoutParams createParams = new LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        createParams.rightMargin = dp(6);
+        actions.addView(create, createParams);
+        actions.addView(chat, new LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+        LinearLayout.LayoutParams wrap = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        wrap.topMargin = dp(8);
+        rows.addView(actions, wrap);
+    }
+
+    private void onRoleTaskSelected(QuickTask task) {
+        Listener currentListener = listener;
+        if (currentListener != null) currentListener.onTaskSelected(task);
+    }
+
+    private TextView roleActionButton(String text, int ink, int fill) {
+        TextView button = new TextView(getContext());
+        button.setText(text);
+        button.setTextColor(ink);
+        button.setTextSize(14);
+        button.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        button.setGravity(Gravity.CENTER);
+        button.setPadding(dp(12), dp(10), dp(12), dp(10));
+        GradientDrawable background = new GradientDrawable();
+        background.setColor(fill);
+        background.setCornerRadius(dp(14));
+        button.setBackground(background);
+        button.setClickable(true);
+        button.setFocusable(true);
+        return button;
+    }
+
     private void addRow(String label, String detail, boolean clickable, boolean enabled,
                         Runnable action) {
+        addRow(label, detail, clickable, enabled, action, false);
+    }
+
+    private void addRow(String label, String detail, boolean clickable, boolean enabled,
+                        Runnable action, boolean highlighted) {
         LinearLayout row = new LinearLayout(getContext());
         row.setOrientation(LinearLayout.VERTICAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
         row.setMinimumHeight(dp(54));
         row.setPadding(dp(12), dp(9), dp(12), dp(9));
-        row.setBackground(rowBackground(enabled));
+        row.setBackground(highlighted ? highlightBackground() : rowBackground(enabled));
         row.setAlpha(enabled ? 1f : 0.68f);
 
         TextView name = new TextView(getContext());
         name.setText(label);
-        name.setTextColor(enabled ? palette.ink() : palette.muted());
+        name.setTextColor(highlighted ? palette.accent()
+                : (enabled ? palette.ink() : palette.muted()));
         name.setTextSize(14);
         name.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         row.addView(name, new LinearLayout.LayoutParams(
@@ -270,6 +345,13 @@ public final class AssistMenuView extends FrameLayout {
     private GradientDrawable rowBackground(boolean enabled) {
         GradientDrawable drawable = new GradientDrawable();
         drawable.setColor(enabled ? palette.tonal() : Color.TRANSPARENT);
+        drawable.setCornerRadius(dp(12));
+        return drawable;
+    }
+
+    private GradientDrawable highlightBackground() {
+        GradientDrawable drawable = new GradientDrawable();
+        drawable.setColor(palette.accentSoft());
         drawable.setCornerRadius(dp(12));
         return drawable;
     }

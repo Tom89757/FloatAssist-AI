@@ -81,10 +81,35 @@ public final class AssistMenuModel {
     }
 
     private final List<QuickTask> tasks;
+    private final String selectedRoleId;
+    private final String selectedRoleName;
 
     public AssistMenuModel(List<QuickTask> tasks) {
+        this(tasks, "", "");
+    }
+
+    public AssistMenuModel(List<QuickTask> tasks, String selectedRoleId, String selectedRoleName) {
         Objects.requireNonNull(tasks, "tasks");
         this.tasks = List.copyOf(tasks);
+        this.selectedRoleId = selectedRoleId == null ? "" : selectedRoleId;
+        this.selectedRoleName = selectedRoleName == null ? "" : selectedRoleName;
+    }
+
+    public String selectedRoleId() {
+        return selectedRoleId;
+    }
+
+    public String selectedRoleName() {
+        return selectedRoleName;
+    }
+
+    public boolean isSelectedRole(QuickTask task) {
+        if (task == null) return false;
+        String id = task.id();
+        if (com.dshgojava.assist.role.RoleMenu.NONE_ID.equals(id)) {
+            return selectedRoleId.isEmpty();
+        }
+        return id.equals(com.dshgojava.assist.role.RoleMenu.PREFIX + selectedRoleId);
     }
 
     public static AssistMenuModel p0() {
@@ -97,12 +122,19 @@ public final class AssistMenuModel {
         return new AssistMenuModel(tasks);
     }
 
-    /** Full menu including the role selector rows (defaults + custom + reset + create). */
+    /** Full menu including the role selector rows (defaults + custom + reset). */
     public static AssistMenuModel all(List<com.dshgojava.assist.role.Role> customRoles) {
+        return all(customRoles, "", "");
+    }
+
+    public static AssistMenuModel all(
+            List<com.dshgojava.assist.role.Role> customRoles,
+            String selectedRoleId,
+            String selectedRoleName) {
         List<QuickTask> tasks = new ArrayList<>(TaskRegistry.all());
         tasks.add(TaskRegistry.imagePicker());
         tasks.addAll(com.dshgojava.assist.role.RoleMenu.tasks(customRoles));
-        return new AssistMenuModel(tasks);
+        return new AssistMenuModel(tasks, selectedRoleId, selectedRoleName);
     }
 
     public List<GroupRow> groups(TaskGate gate) {

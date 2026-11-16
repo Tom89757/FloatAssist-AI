@@ -27,6 +27,7 @@ import com.dshgojava.assist.model.ModelChannel;
 import com.dshgojava.assist.platform.BallGeometry;
 import com.dshgojava.assist.platform.OverlayMotion;
 import com.dshgojava.assist.platform.OverlayViewUtils;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 
@@ -70,6 +71,7 @@ public final class AssistCardLayer implements AssistCardView.Listener,
     private boolean dismissing;
     private boolean captureHidden;
     private boolean initialRecorded;
+    private boolean chatMode;
     private int baseY;
     private String transcript = "";
     private String pendingQuestion = "";
@@ -126,6 +128,7 @@ public final class AssistCardLayer implements AssistCardView.Listener,
         this.asking = false;
         this.dismissing = false;
         this.initialRecorded = false;
+        this.chatMode = false;
         this.transcript = "";
         this.pendingQuestion = "";
 
@@ -158,6 +161,47 @@ public final class AssistCardLayer implements AssistCardView.Listener,
             }
         });
         slideTo(placement.x(), true, null);
+    }
+
+    /** Opens a free chat card with no task result; the role persona is already in the model. */
+    public void showChat(QuickTask task) {
+        Objects.requireNonNull(task, "task");
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            main.post(() -> showChat(task));
+            return;
+        }
+        dismissNow();
+        followUp = new AssistFollowUp(followUpChannel, this);
+        this.task = task;
+        this.chatMode = true;
+        this.current = AssistResult.done("", List.of());
+        this.followUpStarted = false;
+        this.asking = false;
+        this.dismissing = false;
+        this.initialRecorded = false;
+        this.transcript = "";
+        this.pendingQuestion = "";
+
+        AssistCardView next = new AssistCardView(context, this);
+        next.bindTask(task);
+        if (!place()) {
+            Toast.makeText(context, R.string.assist_overlay_attach_failed,
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+        params = baseParams();
+        params.x = placement.hiddenX();
+        try {
+            windows.addView(next, params);
+        } catch (RuntimeException error) {
+            Toast.makeText(context, R.string.assist_overlay_attach_failed,
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+        card = next;
+        card.setVisibility(captureHidden ? View.INVISIBLE : View.VISIBLE);
+        card.render(current, "", false);
+        slideTo(placement.x(), true, () -> card.showAskBar());
     }
 
     public void reposition() {
@@ -254,6 +298,9 @@ public final class AssistCardLayer implements AssistCardView.Listener,
         AssistResult state;
         if (followUpStarted) {
             state = followUp.continueFollowUp(clean);
+        } else if (chatMode) {
+            state = followUp.chat(clean);
+            followUpStarted = true;
         } else {
             state = followUp.begin(task.title(), current.text(), clean);
             followUpStarted = true;
@@ -517,6 +564,7 @@ public final class AssistCardLayer implements AssistCardView.Listener,
         current = AssistResult.idle();
         followUpStarted = false;
         initialRecorded = false;
+        chatMode = false;
         transcript = "";
         pendingQuestion = "";
         task = null;

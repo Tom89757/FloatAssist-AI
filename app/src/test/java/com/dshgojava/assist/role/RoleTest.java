@@ -43,8 +43,14 @@ class RoleTest {
         assertTrue(tasks.stream().allMatch(task -> task.source() == SourceKind.ROLE));
         assertTrue(tasks.stream().anyMatch(task -> task.id().equals("role.stock")));
         assertTrue(tasks.stream().anyMatch(task -> task.id().equals("role.custom-1")));
-        assertTrue(tasks.stream().anyMatch(task -> task.id().equals(RoleMenu.NONE_ID)));
-        assertTrue(tasks.stream().anyMatch(task -> task.id().equals(RoleMenu.CREATE_ID)));
+        assertTrue(tasks.stream().anyMatch(task -> task.id().equals(RoleMenu.NONE_ID)
+                && task.title().equals("默认角色")));
+        assertFalse(tasks.stream().anyMatch(task -> task.id().equals(RoleMenu.CREATE_ID)));
+    }
+
+    @Test
+    void noneRoleIsNamedDefaultRole() {
+        assertEquals("默认角色", RoleCatalog.none().name());
     }
 
     @Test
