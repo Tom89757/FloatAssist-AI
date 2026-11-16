@@ -70,7 +70,6 @@ public final class AssistCardLayer implements AssistCardView.Listener,
     private boolean asking;
     private boolean dismissing;
     private boolean captureHidden;
-    private boolean initialRecorded;
     private boolean chatMode;
     private int baseY;
     private String transcript = "";
@@ -127,7 +126,6 @@ public final class AssistCardLayer implements AssistCardView.Listener,
         this.followUpStarted = false;
         this.asking = false;
         this.dismissing = false;
-        this.initialRecorded = false;
         this.chatMode = false;
         this.transcript = "";
         this.pendingQuestion = "";
@@ -178,7 +176,6 @@ public final class AssistCardLayer implements AssistCardView.Listener,
         this.followUpStarted = false;
         this.asking = false;
         this.dismissing = false;
-        this.initialRecorded = false;
         this.transcript = "";
         this.pendingQuestion = "";
 
@@ -399,10 +396,6 @@ public final class AssistCardLayer implements AssistCardView.Listener,
         current = state;
         if (state.stage() == Stage.DONE) {
             transcript = state.text();
-            if (!initialRecorded) {
-                initialRecorded = true;
-                record(state.text(), false);
-            }
         }
         render();
     }
@@ -415,15 +408,17 @@ public final class AssistCardLayer implements AssistCardView.Listener,
             if (state.stage() == Stage.DONE) {
                 transcript = join(transcript, "【追问】" + pendingQuestion, state.text());
                 pendingQuestion = "";
-                record(state.text(), true);
             }
         }
         render();
     }
 
-    private void record(String text, boolean followUp) {
-        if (history == null || task == null || text == null || text.isBlank()) return;
-        history.record(task, text, followUp);
+    /** Persists the whole conversation once the card is dismissed, not each answer. */
+    private void recordFinal() {
+        if (history == null || task == null) return;
+        String text = transcript;
+        if (text == null || text.isBlank()) return;
+        history.record(task, text, followUpStarted);
     }
 
     private void render() {
@@ -540,6 +535,7 @@ public final class AssistCardLayer implements AssistCardView.Listener,
     }
 
     private void removeNow() {
+        recordFinal();
         AssistCardView currentCard = card;
         card = null;
         params = null;
@@ -563,7 +559,6 @@ public final class AssistCardLayer implements AssistCardView.Listener,
         }
         current = AssistResult.idle();
         followUpStarted = false;
-        initialRecorded = false;
         chatMode = false;
         transcript = "";
         pendingQuestion = "";

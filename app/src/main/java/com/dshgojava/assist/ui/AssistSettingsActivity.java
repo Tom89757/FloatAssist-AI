@@ -7,15 +7,19 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.text.TextUtils;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -26,8 +30,15 @@ import com.dshgojava.assist.store.AssistHistoryEntry;
 import com.dshgojava.assist.store.AssistHistoryStore;
 import com.dshgojava.assist.store.AssistPrefs;
 import java.text.DateFormat;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
@@ -64,6 +75,12 @@ public final class AssistSettingsActivity extends Activity {
     private Button clearHistory;
     private LinearLayout historyList;
     private TextView historyEmpty;
+    private HorizontalScrollView dateSelector;
+    private LinearLayout dateSelectorRow;
+    private final DateTimeFormatter dateLabelFormatter = DateTimeFormatter.ofPattern("M月d日");
+    private final List<AssistHistoryEntry> allEntries = new ArrayList<>();
+    private final Map<LocalDate, List<AssistHistoryEntry>> entriesByDate = new LinkedHashMap<>();
+    private LocalDate selectedDate;
     private boolean binding;
     private boolean destroyed;
     private boolean preferencesLoaded;
@@ -105,6 +122,8 @@ public final class AssistSettingsActivity extends Activity {
         clearHistory = findViewById(R.id.settingsClearHistory);
         historyList = findViewById(R.id.settingsHistoryList);
         historyEmpty = findViewById(R.id.settingsHistoryEmpty);
+        dateSelector = findViewById(R.id.settingsDateSelector);
+        dateSelectorRow = findViewById(R.id.settingsDateSelectorRow);
 
         overlaySwitch.setOnCheckedChangeListener((button, checked) -> {
             if (binding || !preferencesLoaded) return;
@@ -377,8 +396,77 @@ public final class AssistSettingsActivity extends Activity {
     }
 
     private void renderHistory(List<AssistHistoryEntry> entries) {
+        allEntries.clear();
+        allEntries.addAll(entries);
+        groupByDate();
+        renderDateSelector();
+        renderSelectedDate();
+    }
+
+    private void groupByDate() {
+        entriesByDate.clear();
+        for (AssistHistoryEntry entry : allEntries) {
+            LocalDate day = Instant.ofEpochMilli(entry.createdAtMillis())
+                    .atZone(ZoneId.systemDefault()).toLocalDate();
+            entriesByDate.computeIfAbsent(day, key -> new ArrayList<>()).add(entry);
+        }
+        if (selectedDate == null || !entriesByDate.containsKey(selectedDate)) {
+            selectedDate = entriesByDate.isEmpty()
+                    ? null : entriesByDate.keySet().iterator().next();
+        }
+    }
+
+    private void renderDateSelector() {
+        dateSelectorRow.removeAllViews();
+        boolean show = !entriesByDate.isEmpty();
+        dateSelector.setVisibility(show ? View.VISIBLE : View.GONE);
+        if (!show) return;
+        for (LocalDate day : entriesByDate.keySet()) {
+            dateSelectorRow.addView(dateChip(day));
+        }
+    }
+
+    private TextView dateChip(LocalDate day) {
+        boolean selected = day.equals(selectedDate);
+        TextView chip = new TextView(this);
+        chip.setText(dateLabel(day));
+        chip.setTextSize(14);
+        chip.setGravity(Gravity.CENTER);
+        chip.setPadding(dp(14), dp(8), dp(14), dp(8));
+        chip.setTextColor(selected ? 0xFFFFFFFF : 0xFF333333);
+        GradientDrawable background = new GradientDrawable();
+        background.setColor(selected ? 0xFF4B67B4 : 0xFFE2E2E2);
+        background.setCornerRadius(dp(18));
+        chip.setBackground(background);
+        chip.setClickable(true);
+        chip.setFocusable(true);
+        chip.setOnClickListener(view -> selectDate(day));
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        params.rightMargin = dp(8);
+        chip.setLayoutParams(params);
+        return chip;
+    }
+
+    private String dateLabel(LocalDate day) {
+        LocalDate today = LocalDate.now();
+        if (day.equals(today)) return getString(R.string.assist_history_today);
+        if (day.equals(today.minusDays(1))) return getString(R.string.assist_history_yesterday);
+        return day.format(dateLabelFormatter);
+    }
+
+    private void selectDate(LocalDate day) {
+        if (day == null || day.equals(selectedDate)) return;
+        selectedDate = day;
+        renderDateSelector();
+        renderSelectedDate();
+    }
+
+    private void renderSelectedDate() {
         historyList.removeAllViews();
-        boolean empty = entries.isEmpty();
+        List<AssistHistoryEntry> entries = selectedDate == null
+                ? List.of() : entriesByDate.getOrDefault(selectedDate, List.of());
+        boolean empty = allEntries.isEmpty();
         historyEmpty.setVisibility(empty ? View.VISIBLE : View.GONE);
         historyEmpty.setText(R.string.assist_history_empty);
         clearHistory.setEnabled(!empty);
@@ -441,11 +529,22 @@ public final class AssistSettingsActivity extends Activity {
     }
 
     private void showHistoryEntry(AssistHistoryEntry entry) {
+        TextView body = new TextView(this);
+        body.setText(entry.text());
+        body.setTextIsSelectable(true);
+        body.setTextSize(15);
+        body.setPadding(dp(8), dp(4), dp(8), dp(4));
+
+        ScrollView scroller = new ScrollView(this);
+        scroller.setPadding(dp(16), dp(8), dp(16), dp(8));
+        scroller.addView(body, new ScrollView.LayoutParams(
+                ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
+
         new AlertDialog.Builder(this)
                 .setTitle(entry.followUp()
                         ? getString(R.string.assist_history_follow_up_title, entry.taskTitle())
                         : entry.taskTitle())
-                .setMessage(entry.text())
+                .setView(scroller)
                 .setPositiveButton(android.R.string.ok, null)
                 .show();
     }

@@ -132,6 +132,8 @@
 
     <string name="assist_history_title">History</string>
     <string name="assist_history_empty">No history yet</string>
+    <string name="assist_history_today">Today</string>
+    <string name="assist_history_yesterday">Yesterday</string>
     <string name="assist_history_delete">Delete</string>
     <string name="assist_history_clear">Clear all</string>
 
