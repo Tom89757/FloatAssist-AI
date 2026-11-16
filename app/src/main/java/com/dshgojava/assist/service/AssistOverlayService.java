@@ -473,6 +473,8 @@ public final class AssistOverlayService extends Service {
         }
         String roleId = RoleMenu.NONE_ID.equals(taskId) ? Role.NONE_ID : RoleMenu.roleId(taskId);
         roleStore.select(roleId);
+        menuModel = buildMenuModel();
+        if (ball != null) ball.updateModel(menuModel);
         Role role = com.dshgojava.assist.role.RoleCatalog
                 .find(roleId, roleStore.custom()).orElse(com.dshgojava.assist.role.RoleCatalog.none());
         Log.i(TAG, "role selected: " + roleId + " (" + role.name() + ")");

@@ -118,6 +118,14 @@ public final class AssistMenuView extends FrameLayout {
         rebuild(false);
     }
 
+    /** Re-binds the model/gate without leaving the current group, so a role switch
+     *  can update the selection highlight in place. */
+    public void refresh(AssistMenuModel model, AssistMenuModel.TaskGate gate) {
+        this.model = model;
+        this.gate = gate;
+        rebuild(false);
+    }
+
     public boolean showingGroup() {
         return current != null;
     }

@@ -114,9 +114,14 @@ public final class AssistBall {
         return ball.dock().side();
     }
 
-    /** Replaces the menu model; the next opened menu reflects the new rows. */
+    /** Replaces the menu model; an open menu is refreshed in place. */
     public void updateModel(AssistMenuModel nextModel) {
         if (nextModel != null) this.model = nextModel;
+        AssistMenuView current = menu;
+        if (current != null) {
+            current.refresh(model, gate);
+            resizeMenu();
+        }
     }
 
     /** Called on the main thread by the accessibility screenshot guard. */
@@ -208,7 +213,7 @@ public final class AssistBall {
     private final AssistMenuView.Listener menuListener = new AssistMenuView.Listener() {
         @Override
         public void onTaskSelected(QuickTask task) {
-            dismissMenu();
+            if (!isRoleSelector(task)) dismissMenu();
             listener.onTaskSelected(task);
         }
 
@@ -239,6 +244,12 @@ public final class AssistBall {
             resizeMenu();
         }
     };
+
+    private boolean isRoleSelector(QuickTask task) {
+        return task != null && task.source() == SourceKind.ROLE
+                && !RoleMenu.CREATE_ID.equals(task.id())
+                && !RoleMenu.CHAT_ID.equals(task.id());
+    }
 
     private void resizeMenu() {
         AssistMenuView current = menu;
