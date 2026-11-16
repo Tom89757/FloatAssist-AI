@@ -561,7 +561,7 @@ public final class AssistOverlayService extends Service {
     private AssistMenuModel.Block blockFor(QuickTask task) {
         boolean clipboard = getSystemService(android.content.ClipboardManager.class) != null;
         return AssistGate.blockFor(task, new AssistGate.Capabilities(
-                A11yBridge.isConnected(), model.ready(), model.supportsVision(),
+                A11yBridge.available(this), model.ready(), model.supportsVision(),
                 clipboard, imageSource != null && imageSource.available(),
                 voiceSource != null && voiceSource.available() && microphoneGranted()));
     }
