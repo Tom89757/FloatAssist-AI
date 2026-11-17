@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="assist_service_label">快捷助手</string>
+    <string name="app_name">\u200BAI助手</string>
+    <string name="assist_service_label">AI助手</string>
     <string name="assist_accessibility_description">仅在你主动触发快捷任务时读取当前屏幕，不会在后台操控其它应用。</string>
-    <string name="assist_channel">快捷助手</string>
-    <string name="assist_permission_channel">快捷助手权限</string>
-    <string name="assist_running">悬浮快捷助手已就绪</string>
-    <string name="assist_notification_open">打开快捷助手设置</string>
+    <string name="assist_channel">AI助手</string>
+    <string name="assist_permission_channel">AI助手权限</string>
+    <string name="assist_running">悬浮AI助手已就绪</string>
+    <string name="assist_notification_open">打开AI助手设置</string>
 
-    <string name="assist_menu_title">快捷助手</string>
+    <string name="assist_menu_title">AI助手</string>
     <string name="assist_menu_back">返回</string>
     <string name="assist_menu_close">关闭</string>
     <string name="assist_menu_task_count">%1$d 个任务</string>
@@ -66,7 +67,7 @@
     <string name="assist_unavailable_clipboard">剪贴板为空</string>
     <string name="assist_unavailable_image">尚未选择图片</string>
     <string name="assist_settings_pending">设置页尚未接入，请稍后再连接模型。</string>
-    <string name="assist_capture_unavailable">无法打开快捷助手的取料窗口</string>
+    <string name="assist_capture_unavailable">无法打开AI助手的取料窗口</string>
     <string name="assist_clipboard_unavailable">剪贴板为空，或系统当前不允许读取剪贴板</string>
     <string name="assist_clipboard_empty">剪贴板没有可处理的文字</string>
     <string name="assist_image_picker_unavailable">系统没有可用的图片选择器</string>
@@ -102,7 +103,7 @@
     <string name="assist_card_stop">停止</string>
     <string name="assist_card_retry">重试</string>
     <string name="assist_card_share_chooser">分享结果</string>
-    <string name="assist_card_window_title">快捷助手结果</string>
+    <string name="assist_card_window_title">AI助手结果</string>
     <string name="assist_card_drag">下滑关闭</string>
     <string name="assist_copied">已复制</string>
     <string name="assist_copy_failed">复制失败</string>
@@ -153,7 +154,7 @@
     <string name="assist_permission_a11y">开启无障碍</string>
 
     <string name="assist_menu_settings">设置</string>
-    <string name="assist_settings_title">快捷助手设置</string>
+    <string name="assist_settings_title">AI助手设置</string>
     <string name="assist_settings_overlay_section">悬浮助手</string>
     <string name="assist_settings_open_overlay">打开悬浮窗权限设置</string>
     <string name="assist_settings_open_a11y">打开无障碍设置</string>

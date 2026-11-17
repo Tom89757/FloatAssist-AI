@@ -322,11 +322,9 @@ public final class AssistOverlayService extends Service {
     }
 
     private AssistCardLayer createCardLayer() {
-        Context app = getApplicationContext();
-        WindowManager appWindows = app.getSystemService(WindowManager.class);
-        if (appWindows == null) appWindows = getSystemService(WindowManager.class);
-        return new AssistCardLayer(app, appWindows,
-                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+        WindowManager windows = channelWindows(activeChannel);
+        return new AssistCardLayer(overlayContext, windows,
+                activeChannel.windowType(),
                 this::safeArea, this::ballSide, model, this::recordHistory);
     }
 
