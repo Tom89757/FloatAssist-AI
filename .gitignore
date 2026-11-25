@@ -42,3 +42,7 @@ local.properties
 
 # Codex 运行日志
 .codex_logs/
+
+# 本地实施规范与驱动脚本（不纳入版本库）
+/AGENTS.md
+/run_quick_assist.sh
