@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">\u200BAI助手</string>
+    <string name="app_name">\u200BFloatAI</string>
     <string name="assist_service_label">AI助手</string>
     <string name="assist_accessibility_description">仅在你主动触发快捷任务时读取当前屏幕，不会在后台操控其它应用。</string>
     <string name="assist_channel">AI助手</string>

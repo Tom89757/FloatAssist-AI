@@ -2,6 +2,11 @@ plugins {
     id 'com.android.application'
 }
 
+// 发布版本与编译日期：versionName 形如 1.0.0+2026-11-25，release APK 文件名同样携带，便于在 GitHub Release 中辨识
+def appVersionName = '1.0.0'
+def appName = 'FloatAssist'
+def buildDate = new Date().format('yyyy-MM-dd')
+
 android {
     namespace 'com.dshgojava.assist'
     compileSdk 34
@@ -11,7 +16,15 @@ android {
         minSdk 26
         targetSdk 34
         versionCode 1
-        versionName '0.1.0'
+        versionName "${appVersionName}+${buildDate}"
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            if (variant.buildType.name == 'release') {
+                outputFileName = "${appName}-${appVersionName}-${buildDate}-release.apk"
+            }
+        }
     }
 
     buildFeatures {

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">\u200BAI助手</string>
+    <string name="app_name">\u200BFloatAI</string>
     <string name="assist_service_label">Quick assist</string>
     <string name="assist_accessibility_description">Reads the current screen only when you start a quick task. It never operates other apps in the background.</string>
     <string name="assist_channel">Quick assist</string>
